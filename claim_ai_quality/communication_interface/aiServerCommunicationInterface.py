@@ -16,7 +16,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
         for index, next_bundle in enumerate(self._get_imis_data(), start=0):
             self.response_query[index] = 'Sent'
             await self.send_data_bundle(next_bundle, data_type='claim.bundle.payload')
-        await self._sustain_conneciton()
+        await self._sustain_connection()
 
     async def on_receive(self, message):
         # TODO: should send information: about received responsebundle and update claims
@@ -48,7 +48,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
         else:
             print("Uncategorized payload: "+str(payload))
 
-    async def _sustain_conneciton(self):
+    async def _sustain_connection(self):
         # Keeps loop alive untill all bundles were evaluated
         while True:
             unique_bundle_statuses = groupby(self.response_query.values())
