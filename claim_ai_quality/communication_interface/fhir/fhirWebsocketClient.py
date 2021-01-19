@@ -1,13 +1,14 @@
 import asyncio
 import functools
-import time
+import concurrent.futures
 from abc import ABC
 
-from typing import List, Coroutine
+from typing import List
 
+from asgiref.sync import sync_to_async
 from django.db.models import Model
 
-from claim_ai_quality.communication_interface.fhirConverter import FHIRBundleConverter
+from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBundleConverter
 from core.websocket import AsyncWebSocketClient
 
 def ensure_connection(socket_client):
@@ -24,9 +25,11 @@ def ensure_connection(socket_client):
 
 
 class AbstractFHIRWebSocket(ABC):
-    TIMEOUT = 3600
+    """
+    Abstract async websocket client used for sending imis objects through FHIR.
+    """
 
-    def __init__(self, web_socket_client: AsyncWebSocketClient, fhir_converter: FHIRBundleConverter):
+    def __init__(self, web_socket_client: AsyncWebSocketClient, fhir_converter: ClaimBundleConverter):
         self.server_client = web_socket_client
         self.fhir_converter = fhir_converter
         self.server_client.add_action_on_receive(self.on_receive)
@@ -43,9 +46,14 @@ class AbstractFHIRWebSocket(ABC):
 
     @ensure_connection("server_client")
     async def send_data_bundle(self, data_bundle: List[Model], data_type='data_bundle'):
-        fhir_obj = self.fhir_converter.build_data_bundle(data_bundle)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(self.__send, data_bundle, data_type)
+
+    def __send(self, data_bundle, data_type='data_bundle'):
+        fhir_obj = self.fhir_converter.build_claim_bundle(data_bundle)
         payload = {'type': data_type, 'content': fhir_obj}
-        await self.server_client.send(payload)
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(self.server_client.send(payload))
 
     async def on_receive(self, message):
         raise NotImplementedError("on_receive has to implemented")
