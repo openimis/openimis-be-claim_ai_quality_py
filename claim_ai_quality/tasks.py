@@ -1,7 +1,8 @@
 import asyncio
 
+from api_fhir_r4.serializers import ClaimSerializer
 from claim.models import Claim
-from .communication_interface import AiServerWebsocketClient, AiServerCommunicationInterface, FHIRBundleConverter
+from .communication_interface import AiServerWebsocketClient, AiServerCommunicationInterface, ClaimBundleConverter
 
 
 def claim_ai_processing():
@@ -27,7 +28,7 @@ def ai_evaluation():
 
     socket_url = "ws://localhost:8001/claim_ai/ws/Claim/process1/"  # ClaimAiQualityConfig.claim_ai_url
     socket_client = AiServerWebsocketClient(socket_url=socket_url)
-    communication_interface = AiServerCommunicationInterface(socket_client, FHIRBundleConverter())
+    communication_interface = AiServerCommunicationInterface(socket_client, ClaimBundleConverter(ClaimSerializer()))
 
     communication_interface.open_connection()
 
