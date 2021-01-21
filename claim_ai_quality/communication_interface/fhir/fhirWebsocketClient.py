@@ -1,6 +1,8 @@
 import asyncio
 import functools
 import concurrent.futures
+import logging
+
 from abc import ABC
 
 from typing import List
@@ -11,12 +13,15 @@ from django.db.models import Model
 from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBundleConverter
 from core.websocket import AsyncWebSocketClient
 
+logger = logging.getLogger(__name__)
+
 def ensure_connection(socket_client):
     def wrapper(func):
         @functools.wraps(func)
         async def wrapped(self, *args, **kwargs):
             client = getattr(self, socket_client)
             if not client.is_open():
+                await self._connection_lost()
                 raise ConnectionError("Connection has to be opened before sending data")
             return await func(self, *args, **kwargs)
         return wrapped
@@ -37,8 +42,9 @@ class AbstractFHIRWebSocket(ABC):
 
         self.response_query = []
         self.running = False
+        self.connection_lost = False
 
-    def open_connection(self):
+    async def open_connection(self):
         self.server_client.open_connection()
 
     def close_connection(self):
@@ -71,3 +77,8 @@ class AbstractFHIRWebSocket(ABC):
     async def _connection_keeper(self):
         while self.running:
             await asyncio.sleep(0)
+
+    async def _connection_lost(self):
+        logger.error(F"Websocket connection {self.server_client.socket_url} failed")
+        self.connection_lost = True
+        self.release_connection()
