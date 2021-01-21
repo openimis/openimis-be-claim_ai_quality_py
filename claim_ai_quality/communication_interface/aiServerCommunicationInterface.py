@@ -84,12 +84,17 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             print("Uncategorized payload: "+str(payload))
 
     async def _sustain_connection(self):
-        # Keeps loop alive until all bundles were evaluated
+        # Keeps loop alive until all bundles were evaluated and connection is open
         while True:
             unique_bundle_statuses = groupby(self.response_query.values())
             element, _ = next(unique_bundle_statuses, (None, None))
+            # All sent bundles were evaluated
             if element == 'Valuated' \
                     and not next(unique_bundle_statuses, False)\
                     and self.server_client.is_open():
                 break
+            # Connection was lost
+            if self.connection_lost:
+                break
+
             continue
