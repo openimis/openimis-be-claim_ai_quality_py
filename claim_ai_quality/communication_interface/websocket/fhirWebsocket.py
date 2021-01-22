@@ -2,6 +2,7 @@ import asyncio
 import functools
 import concurrent.futures
 import logging
+import uuid
 
 from abc import ABC
 
@@ -14,6 +15,7 @@ from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBun
 from core.websocket import AsyncWebSocketClient
 
 logger = logging.getLogger(__name__)
+
 
 def ensure_connection(socket_client):
     def wrapper(func):
@@ -40,7 +42,7 @@ class AbstractFHIRWebSocket(ABC):
         self.server_client.add_action_on_receive(self.on_receive)
         self.server_client.add_action_on_close(self.on_close)
 
-        self.response_query = []
+        self.response_query = {}
         self.running = False
         self.connection_lost = False
 
@@ -51,13 +53,16 @@ class AbstractFHIRWebSocket(ABC):
         self.server_client.close_connection()
 
     @ensure_connection("server_client")
-    async def send_data_bundle(self, data_bundle: List[Model], data_type='data_bundle'):
+    async def send_data_bundle(self, data_bundle: List[Model], data_type='data_bundle', bundle_id=None):
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.submit(self.__send, data_bundle, data_type)
+            kwargs = {}
+            if bundle_id:
+                kwargs["bundle_id"] = bundle_id
+            executor.submit(self._send, data_bundle, data_type, **kwargs)
 
-    def __send(self, data_bundle, data_type='data_bundle'):
+    def _send(self, data_bundle, data_type='data_bundle', **payload_args):
         fhir_obj = self.fhir_converter.build_claim_bundle(data_bundle)
-        payload = {'type': data_type, 'content': fhir_obj}
+        payload = {'type': data_type, 'content': fhir_obj, **payload_args}
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self.server_client.send(payload))
 

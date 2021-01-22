@@ -2,6 +2,8 @@ import asyncio
 import concurrent.futures
 import functools
 import json
+import uuid
+import time
 
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
@@ -10,25 +12,25 @@ from itertools import groupby
 
 from django.core.paginator import Paginator
 
-from .fhir import AbstractFHIRWebSocket
+from .websocket import AbstractFHIRWebSocket
 from ..apps import ClaimAiQualityConfig
 
 
 class AiServerCommunicationInterface(AbstractFHIRWebSocket):
 
-    async def sent_all(self):
+    async def send_all(self):
         self.response_query = {}
 
-        index = 0  # number of sent chunks
+        x = time.time()
         data = await self._get_imis_data()  # generator of paginated data
-
         next_bundle = await self._get_from_iterator(data)  # first bundle of claims
+
         while next_bundle:
-            self.response_query[index] = 'Sent'
-            self.send_bundle(next_bundle)
-            index += 1
+            bundle_id = str(uuid.uuid4())
+            self.response_query[bundle_id] = 'Sent'
+            self.send_bundle(next_bundle, bundle_id)
             next_bundle = await self._get_from_iterator(data)
-            await self._sustain_connection()
+            await self.sustain_connection()
 
     async def on_receive(self, message):
         # TODO: should send information: about received response bundle and update claims
@@ -39,13 +41,19 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
         print("Content of payload hash: " + str(str(fhir_claim_response).__hash__()))
         pass
 
-    def send_bundle(self, bundle):
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.send_data_bundle(bundle, data_type='claim.bundle.payload'))
-        asyncio.ensure_future(task)
+    async def send_bundle_async(self, bundle):
+        bundle_id = str(uuid.uuid4())
+        self.response_query[bundle_id] = 'Sent'
+        self.send_bundle(bundle, bundle_id)
+        await self.sustain_connection()
 
-    def update_response_query(self):
-        self.response_query.pop()
+    def send_bundle(self, bundle, bundle_id=None):
+        if not bundle_id:
+            bundle_id = str(uuid.uuid4())
+
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.send_data_bundle(bundle, data_type='claim.bundle.payload', bundle_id=bundle_id))
+        asyncio.ensure_future(task)
 
     async def _get_async_data(self):
         coro = sync_to_async(self._get_imis_data)()
@@ -83,7 +91,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
         else:
             print("Uncategorized payload: "+str(payload))
 
-    async def _sustain_connection(self):
+    async def sustain_connection(self):
         # Keeps loop alive until all bundles were evaluated and connection is open
         while True:
             unique_bundle_statuses = groupby(self.response_query.values())
@@ -96,5 +104,5 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             # Connection was lost
             if self.connection_lost:
                 break
-
+            await asyncio.sleep(0)
             continue
