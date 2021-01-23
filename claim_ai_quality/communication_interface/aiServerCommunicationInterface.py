@@ -88,6 +88,10 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             bundle_index = payload['index']
             self.response_query[bundle_index] = 'Accepted'
             print("Bundle was accepted")
+        elif payload['type'] == 'claim.bundle.evaluation_exception':
+            bundle_index = payload['index']
+            self.response_query[bundle_index] = 'Refused'
+            print(F"Bundle rejected, reason: {payload['content']}")
         else:
             print("Uncategorized payload: "+str(payload))
 
@@ -97,7 +101,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             unique_bundle_statuses = groupby(self.response_query.values())
             element, _ = next(unique_bundle_statuses, (None, None))
             # All sent bundles were evaluated
-            if element == 'Valuated' \
+            if element in ('Valuated', 'Refused') \
                     and not next(unique_bundle_statuses, False)\
                     and self.server_client.is_open():
                 break
