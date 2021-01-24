@@ -7,7 +7,8 @@ DEFAULT_CONFIG = {
     "event_based_activation": False,
     "bundle_size": 100,
     "zip_bundle": False,
-    "connection_timeout": 5
+    "connection_timeout": 5,
+    "authentication_token": ''
 }
 
 
@@ -19,6 +20,7 @@ class ClaimAiQualityConfig(AppConfig):
     bundle_size = DEFAULT_CONFIG["bundle_size"]
     zip_bundle = DEFAULT_CONFIG["zip_bundle"]
     connection_timeout = DEFAULT_CONFIG["connection_timeout"]
+    authentication_token = DEFAULT_CONFIG["authentication_token"]
 
     def _configure_perms(self, cfg):
         for config, config_value in cfg.items():
