@@ -1,2 +1,1 @@
 from .fhirConverter import ClaimBundleConverter
-from .fhirWebsocketClient import AbstractFHIRWebSocket
