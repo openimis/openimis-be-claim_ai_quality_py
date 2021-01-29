@@ -10,18 +10,20 @@ from channels.db import database_sync_to_async
 from claim.models import Claim
 from itertools import groupby
 
+from core.websocket import AsyncWebSocketClient
 from django.core.paginator import Paginator
 
+from . import ClaimBundleConverter
+from . import AIResponsePayloadHandlerMixin
 from .websocket import AbstractFHIRWebSocket
 from ..apps import ClaimAiQualityConfig
 
 
-class AiServerCommunicationInterface(AbstractFHIRWebSocket):
+class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIRWebSocket):
 
     async def send_all(self):
         self.response_query = {}
 
-        x = time.time()
         data = await self._get_imis_data()  # generator of paginated data
         next_bundle = await self._get_from_iterator(data)  # first bundle of claims
 
@@ -33,13 +35,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             await self.sustain_connection()
 
     async def on_receive(self, message):
-        # TODO: should send information: about received response bundle and update claims
         await self.__dispatch(message)
-
-    def update_claims(self, fhir_claim_response):
-        # TODO: Use claim repose adjudication for update
-        print("Content of payload hash: " + str(str(fhir_claim_response).__hash__()))
-        pass
 
     async def send_bundle_async(self, bundle):
         bundle_id = str(uuid.uuid4())
@@ -78,25 +74,7 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
         return list(chunk)
 
     async def __dispatch(self, payload):
-        payload = json.loads(payload)
-        if payload['type'] == 'claim.bundle.payload':
-            self.update_claims(payload['content'])
-            bundle_index = payload['index']
-            self.response_query[bundle_index] = 'Valuated'
-            await self.server_client.send({'type': 'claim.bundle.acceptance', 'content': True})
-        elif payload['type'] == 'claim.bundle.acceptance':
-            bundle_index = payload['index']
-            self.response_query[bundle_index] = 'Accepted'
-            print("Bundle was accepted")
-        elif payload['type'] == 'claim.bundle.evaluation_exception':
-            bundle_index = payload['index']
-            self.response_query[bundle_index] = 'Refused'
-            print(F"Bundle rejected, reason: {payload['content']}")
-        elif payload['type'] == 'claim.bundle.authentication_exception':
-            print(F"Connection rejected, reason: {payload['content']}")
-            raise ConnectionError("Invalid authentication token")
-        else:
-            print("Uncategorized payload: "+str(payload))
+        self.dispatch(payload)
 
     async def sustain_connection(self):
         # Keeps loop alive until all bundles were evaluated and connection is open
