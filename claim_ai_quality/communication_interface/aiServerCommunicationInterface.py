@@ -92,6 +92,9 @@ class AiServerCommunicationInterface(AbstractFHIRWebSocket):
             bundle_index = payload['index']
             self.response_query[bundle_index] = 'Refused'
             print(F"Bundle rejected, reason: {payload['content']}")
+        elif payload['type'] == 'claim.bundle.authentication_exception':
+            print(F"Connection rejected, reason: {payload['content']}")
+            raise ConnectionError("Invalid authentication token")
         else:
             print("Uncategorized payload: "+str(payload))
 
