@@ -3,7 +3,6 @@
 from django.db import migrations
 from claim.models import Claim, ClaimItem, ClaimService
 
-
 def _empty_ai_quality_json():
     return {"was_categorized": False, "request_time": None, "response_time": None}
 
@@ -29,6 +28,7 @@ def _add_claim_json_entry(claim):
             # No categorization for claims that were just entered
             pass
     claim.json_ext = current_json
+    claim.save_history()
     claim.save()
 
 
@@ -39,18 +39,19 @@ def _add_claim_item_entry(claim_item):
             "ai_result": str(claim_item.status)
         }
         claim_item.json_ext = current_json
+        claim_item.save_history()
         claim_item.save()
 
 
 def claim_ai_quality_initial(apps, schema_editor):
-    for claim in Claim.objects.all():
-        _add_claim_json_entry(claim)
-
-    for item in ClaimItem.objects.all():
+    for item in ClaimItem.objects.filter(validity_to=None).all():
         _add_claim_item_entry(item)
 
-    for service in ClaimService.objects.all():
+    for service in ClaimService.objects.filter(validity_to=None).all():
         _add_claim_item_entry(service)
+
+    for claim in Claim.objects.filter(validity_to=None).all():
+        _add_claim_json_entry(claim)
 
 
 class Migration(migrations.Migration):
