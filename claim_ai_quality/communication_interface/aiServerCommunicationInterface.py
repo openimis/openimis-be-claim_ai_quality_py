@@ -59,7 +59,8 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
     @database_sync_to_async
     def _get_imis_data(self):
         queryset = Claim.objects\
-            .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}})\
+            .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}},
+                    validity_to__isnull=True)\
             .order_by('id')\
             .all()
         paginator = Paginator(queryset, ClaimAiQualityConfig.bundle_size)

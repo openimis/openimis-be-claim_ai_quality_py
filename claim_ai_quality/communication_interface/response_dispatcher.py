@@ -4,6 +4,10 @@ from abc import ABC
 
 from typing import Callable, Dict
 
+from asgiref.sync import sync_to_async
+from claim_ai import FHIRConverter
+from django.db import transaction
+
 
 class AbstractPayloadHandler(ABC):
     @property
@@ -32,18 +36,16 @@ class AIResponsePayloadHandlerMixin(AbstractPayloadHandler):
         }
 
     def claim_response_bundle(self, payload):
-        self.update_claims(payload['content'])
+        task = sync_to_async(self.update_claims)(payload['content'])
+        asyncio.ensure_future(task)
         index = payload.get('index', None)
         self.update_response_query(index, 'Valuated')
-        loop = asyncio.get_event_loop()
-        asyncio.ensure_future(
-            self.server_client.send({'type': 'claim.bundle.acceptance', 'content': index})
-        )
+        asyncio.ensure_future(self.server_client.send({'type': 'claim.bundle.acceptance', 'content': index}))
 
+    @transaction.atomic
     def update_claims(self, fhir_claim_response):
-        # TODO: Use claim repose adjudication for update
-        print("Content of payload hash: " + str(str(fhir_claim_response).__hash__()))
-        pass
+        update = self.fhir_converter.update_claims_by_response_bundle(fhir_claim_response)
+        print(F"Claims updated: {update}, Content of payload hash: " + str(str(fhir_claim_response).__hash__()))
 
     def acceptance(self, payload):
         self.update_response_query(payload.get('index', None), 'Accepted')
