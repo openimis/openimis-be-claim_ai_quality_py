@@ -116,7 +116,6 @@ class MisclassificationReportBuilder:
             else self.false_evaluation_service(provided)
 
     def __provided_entry(self, provided, code):
-        print(provided.price_approved)
         return {
             'code': code,
             'quantity': provided.qty_provided,
@@ -132,8 +131,6 @@ class MisclassificationReportBuilder:
         list_of_items = []
         for k, v in errors.items():
             for next_item in v:
-                print(k._asdict())
-                print(next_item)
                 item = {**k._asdict(), **next_item}
                 list_of_items.append(item)
         return list_of_items
