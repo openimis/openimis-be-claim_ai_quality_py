@@ -8,7 +8,7 @@ DEFAULT_CONFIG = {
     "bundle_size": 3,
     "zip_bundle": False,
     "connection_timeout": 5,
-    "authentication_token": 'token',
+    "authentication_token": '',
     "accepted_category_code": 0,
     "rejected_category_code": 1,
     "reason_rejected_by_ai_code": -2,
