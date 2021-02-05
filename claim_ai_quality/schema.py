@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 def get_base_claim_ai_json_extension():
     return {
         "was_categorized": False,
-        "request_time": None,
-        "response_time": None
+        "request_time": "None",
+        "response_time": "None"
     }
 
 
