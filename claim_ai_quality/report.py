@@ -1,9 +1,12 @@
 from collections import namedtuple, defaultdict
 from datetime import datetime
 from functools import lru_cache
+from itertools import chain
+
 from core.models import User, InteractiveUser
 
 from claim.models import Claim, ClaimDetail, ClaimItem, ClaimService
+from typing import Iterable
 
 from claim_ai_quality.apps import ClaimAiQualityConfig
 
@@ -18,29 +21,38 @@ class MisclassificationReportBuilder:
     def __init__(self):
         self.clear_report_data()
 
-    def create_report_data(self, from_data):
+    def create_report_data(self, claims):
         self.clear_report_data()
-        data = from_data
+        data = claims
 
         unique_claims = set()
         errors = defaultdict(lambda: [])
-        for provided in data:
-            claim_status, ai_result = provided.status, provided.json_ext['claim_ai_quality']['ai_result']
-            correctly_classified = self._categorize_item_status(claim_status, ai_result)
+        for claim in data:
+            have_misclassified_items = False
+            provisions = list(chain(
+                claim.items.filter(validity_to=None).all(),
+                claim.services.filter(validity_to=None).all()
+            ))
 
-            if not correctly_classified:
-                key = self.missclassified_record_key(provided.claim)
-                errors[key].append(self.false_evaluation_entry(key, provided))
+            for provided in provisions:
+                classified_correctly = self.include_provision_in_report(provided)
+                self.total_items_and_services += 1
+                if not classified_correctly:
+                    have_misclassified_items = True
 
-            self.total_items_and_services += 1
-            unique_claims.add(provided.claim.id)
+            if have_misclassified_items:
+                for provided in provisions:
+                    print("Provision misclassified is")
+                    key = self.missclassified_record_key(claim)
+                    errors[key].append(self.false_evaluation_entry(key, provided))
 
+            unique_claims.add(claim.id)
         self.total_claims = len(unique_claims)
-        self.accuracy = (self.true_positive+self.true_negative) / self.total_items_and_services
+        self.accuracy = self.get_accuracy()
         self.missclassified_records = self.build_list_of_errors(errors)
 
-    def build_report_data(self, items_and_services):
-        self.create_report_data(items_and_services)
+    def build_report_data(self, claims: Iterable[Claim]):
+        self.create_report_data(claims)
         return {
             'all': str(self.total_items_and_services),
             'total_claims': str(self.total_claims),
@@ -128,9 +140,9 @@ class MisclassificationReportBuilder:
             'provision_type': type,
             'item_status': str(provided.status),
             'quantity': provided.qty_provided,
-            'quantity_approved': provided.qty_approved,
+            'quantity_approved': provided.qty_approved if provided.qty_approved is not None else provided.qty_provided,
             'price': provided.price_asked,
-            'price_approved': provided.price_approved or provided.price_asked,
+            'price_approved': provided.price_approved if provided.price_approved is not None else provided.price_asked,
             'justification': provided.justification or '-',
             'rejection_reason': str(provided.rejection_reason),
             'ai_result': str(provided.json_ext['claim_ai_quality']['ai_result'])
@@ -148,5 +160,19 @@ class MisclassificationReportBuilder:
     def __get_audit_user(self, audit_user_id):
         if audit_user_id:
             return InteractiveUser.objects.get(id=audit_user_id)
+        else:
+            return None
+
+    def include_provision_in_report(self, item_or_service):
+        claim_status, ai_result = item_or_service.status, item_or_service.json_ext['claim_ai_quality']['ai_result']
+        correctly_classified = self._categorize_item_status(claim_status, ai_result)
+        if not correctly_classified:
+            return False
+        else:
+            return True
+
+    def get_accuracy(self):
+        if self.total_items_and_services != 0:
+            return (self.true_positive + self.true_negative) / self.total_items_and_services
         else:
             return None

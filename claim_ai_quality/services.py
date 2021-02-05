@@ -27,13 +27,14 @@ class AiQualityReportService(object):
         queryset = queryset.filter(self.CATEGORIZED_FILTER)  # exclude entered and checked claims from query
         claims = queryset \
             .filter(**self.build_filter(request)) \
-            .all()
+            #.all()
 
         if not claims:
             raise PermissionDenied(_("unauthorized"))
 
-        provided = [(*claim.items.all(), *claim.services.all()) for claim in claims]
-        return chain.from_iterable(provided)
+        return claims
+        # provided = [(*claim.items.all(), *claim.services.all()) for claim in claims]
+        # return chain.from_iterable(provided)
 
     def build_filter(self, request):
         query = {}
