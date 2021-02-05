@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import chain
 
-from core.models import User, InteractiveUser
+from core.models import InteractiveUser
 
 from claim.models import Claim, ClaimDetail, ClaimItem, ClaimService
 from typing import Iterable

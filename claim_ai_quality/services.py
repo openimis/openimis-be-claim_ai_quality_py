@@ -1,5 +1,3 @@
-from itertools import chain
-
 import core
 import uuid
 from claim.models import Claim, ClaimService, ClaimItem
@@ -7,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet, Q
 from django.utils.translation import gettext as _
-from typing import List, Union, Iterator
+from typing import Union, Iterator
 
 
 class AiQualityReportService(object):
@@ -27,14 +25,11 @@ class AiQualityReportService(object):
         queryset = queryset.filter(self.CATEGORIZED_FILTER)  # exclude entered and checked claims from query
         claims = queryset \
             .filter(**self.build_filter(request)) \
-            #.all()
 
         if not claims:
             raise PermissionDenied(_("unauthorized"))
 
         return claims
-        # provided = [(*claim.items.all(), *claim.services.all()) for claim in claims]
-        # return chain.from_iterable(provided)
 
     def build_filter(self, request):
         query = {}

@@ -5,7 +5,7 @@ MODULE_NAME = 'claim_ai_quality'
 DEFAULT_CONFIG = {
     "claim_ai_url": "ws://localhost:8000/claim_ai/ws/Claim/process/",
     "event_based_activation": False,
-    "bundle_size": 3,
+    "bundle_size": 100,
     "zip_bundle": False,
     "connection_timeout": 5,
     "authentication_token": '',

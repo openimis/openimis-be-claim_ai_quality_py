@@ -11,7 +11,6 @@ def _empty_ai_quality_json():
 def _claim_ai_quality_json(claim):
     return {
         "was_categorized": True,
-        # todo: for rejected change for validity_from
         "request_time": str(claim.validity_from_review),
         "response_time": str(claim.validity_from_review)
     }
