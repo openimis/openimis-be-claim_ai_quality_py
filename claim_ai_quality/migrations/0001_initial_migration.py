@@ -3,6 +3,7 @@
 from django.db import migrations
 from claim.models import Claim, ClaimItem, ClaimService
 
+
 def _empty_ai_quality_json():
     return {"was_categorized": False, "request_time": None, "response_time": None}
 
@@ -10,8 +11,8 @@ def _empty_ai_quality_json():
 def _claim_ai_quality_json(claim):
     return {
         "was_categorized": True,
-        "request_time": str(claim.validity_from_review),
-        "response_time": str(claim.validity_from_review)
+        "request_time": str(claim.validity_from_review if claim.validity_from_review else claim.validity_from),
+        "response_time": str(claim.validity_from_review if claim.validity_from_review else claim.validity_from)
     }
 
 
