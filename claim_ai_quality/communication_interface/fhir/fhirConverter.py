@@ -1,16 +1,17 @@
 import concurrent.futures
 
 from typing import List
-
 from api_fhir_r4.models import Bundle, BundleType, BundleEntry
 from api_fhir_r4.serializers import ClaimSerializer
 from django.db.models import Model
+from claim_ai_quality.communication_interface.fhir._claim_response_converter import ClaimResponseConverter
 
 
 class ClaimBundleConverter:
 
     def __init__(self, fhir_serializer: ClaimSerializer):
         self.fhir_serializer = fhir_serializer
+        self.claim_response_converter = ClaimResponseConverter()
         self.fhir_serializer.context['contained'] = True
 
     def build_claim_bundle(self, claims: List[Model]) -> Bundle:
@@ -25,6 +26,18 @@ class ClaimBundleConverter:
 
         bundle = self._build_bundle_set(fhir_claims)
         return bundle
+
+    def update_claims_by_response_bundle(self, claim_response_bundle: dict):
+        processes = []
+        updated_claims = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            for claim in claim_response_bundle['entry']:
+                processes.append(executor.submit(self.claim_response_converter.update_claim, claim['resource']))
+
+            for update in concurrent.futures.as_completed(processes):
+                updated_claims.append(update.result())
+
+        return updated_claims
 
     def _build_bundle_set(self, data):
         bundle = Bundle()
