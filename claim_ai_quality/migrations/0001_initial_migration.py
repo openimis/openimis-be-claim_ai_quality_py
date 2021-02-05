@@ -5,7 +5,7 @@ from claim.models import Claim, ClaimItem, ClaimService
 
 
 def _empty_ai_quality_json():
-    return {"was_categorized": False, "request_time": None, "response_time": None}
+    return {"was_categorized": False, "request_time": 'None', "response_time": 'None'}
 
 
 def _claim_ai_quality_json(claim):

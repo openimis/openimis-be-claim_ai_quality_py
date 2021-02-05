@@ -9,7 +9,7 @@ from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from claim.models import Claim
 from itertools import groupby
-
+from datetime import datetime
 from core.websocket import AsyncWebSocketClient
 from django.core.paginator import Paginator
 
@@ -49,6 +49,9 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
 
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.send_data_bundle(bundle, data_type='claim.bundle.payload', bundle_id=bundle_id))
+        for claim in bundle:
+            claim.json_ext['claim_ai_quality']['request_time'] = datetime.now()
+
         asyncio.ensure_future(task)
 
     async def _get_async_data(self):
@@ -61,6 +64,7 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
         queryset = Claim.objects\
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}},
                     validity_to__isnull=True)\
+            .filter(json_ext__jsoncontains={'claim_ai_quality': {'request_time': None}}) \
             .order_by('id')\
             .all()
         paginator = Paginator(queryset, ClaimAiQualityConfig.bundle_size)
