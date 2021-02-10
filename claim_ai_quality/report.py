@@ -61,7 +61,6 @@ class MisclassificationReportBuilder:
 
             if have_misclassified_items:
                 for provided in provisions:
-                    print("Provision misclassified is")
                     key = self.missclassified_record_key(claim)
                     errors[key].append(self.false_evaluation_entry(key, provided))
 
@@ -183,7 +182,6 @@ class MisclassificationReportBuilder:
             return None
 
     def include_provision_in_report(self, item_or_service):
-        print(item_or_service.json_ext)
         claim_status, ai_result = item_or_service.status, item_or_service.json_ext['claim_ai_quality']['ai_result']
         correctly_classified = self._categorize_item_status(claim_status, ai_result)
         if not correctly_classified:
