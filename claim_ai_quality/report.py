@@ -14,7 +14,7 @@ class CodeStringRepresentation:
     CLAIM_STATUS = {
         1: 'Rejected',
         2: 'Entered',
-        4: 'Chceked',
+        4: 'Checked',
         8: 'Processed',
         16: 'Valuated'
     }
