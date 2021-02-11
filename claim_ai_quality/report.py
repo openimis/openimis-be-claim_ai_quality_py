@@ -10,6 +10,25 @@ from typing import Iterable
 
 from claim_ai_quality.apps import ClaimAiQualityConfig
 
+class CodeStringRepresentation:
+    CLAIM_STATUS = {
+        1: 'Rejected',
+        2: 'Entered',
+        4: 'Checked',
+        8: 'Processed',
+        16: 'Valuated'
+    }
+
+    ITEM_STATUS = {
+        1: 'Accepted',
+        2: 'Rejected'
+    }
+
+    AI_RESULT = {
+        '1': 'Accepted',
+        '2': 'Rejected'
+    }
+
 
 class MisclassificationReportBuilder:
     ClaimKey = namedtuple('ClaimErrorKey', [
@@ -42,7 +61,6 @@ class MisclassificationReportBuilder:
 
             if have_misclassified_items:
                 for provided in provisions:
-                    print("Provision misclassified is")
                     key = self.missclassified_record_key(claim)
                     errors[key].append(self.false_evaluation_entry(key, provided))
 
@@ -78,7 +96,7 @@ class MisclassificationReportBuilder:
         reviewer = self.__get_audit_user(claim.audit_user_id_review)
         return self.ClaimKey(**{
             'claim_id': claim.code,
-            'claim_status': str(claim.status),
+            'claim_status': CodeStringRepresentation.CLAIM_STATUS[claim.status],
             'claim_claimed': claim.claimed,
             'claim_approved': claim.approved,
             'hf': claim.health_facility.name,
@@ -138,14 +156,14 @@ class MisclassificationReportBuilder:
         return {
             'code': code,
             'provision_type': type,
-            'item_status': str(provided.status),
+            'item_status': CodeStringRepresentation.ITEM_STATUS[provided.status],
             'quantity': provided.qty_provided,
             'quantity_approved': provided.qty_approved if provided.qty_approved is not None else provided.qty_provided,
             'price': provided.price_asked,
             'price_approved': provided.price_approved if provided.price_approved is not None else provided.price_asked,
             'justification': provided.justification or '-',
             'rejection_reason': str(provided.rejection_reason),
-            'ai_result': str(provided.json_ext['claim_ai_quality']['ai_result'])
+            'ai_result': CodeStringRepresentation.AI_RESULT[provided.json_ext['claim_ai_quality']['ai_result']]
         }
 
     def build_list_of_errors(self, errors):
