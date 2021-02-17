@@ -11,8 +11,15 @@ def _empty_ai_quality_json():
 def _claim_ai_quality_json(claim):
     return {
         "was_categorized": True,
-        "request_time": str(claim.validity_from_review if claim.validity_from_review else claim.validity_from),
-        "response_time": str(claim.validity_from_review if claim.validity_from_review else claim.validity_from)
+        "request_time": str(claim.validity_from_review),
+        "response_time": str(claim.validity_from_review)
+    }
+
+def _rejected_claim_ai_quality_json(claim):
+    return {
+        "was_categorized": False,
+        "request_time": str(claim.validity_from),
+        "response_time": str(claim.validity_from)
     }
 
 
@@ -22,9 +29,11 @@ def _add_claim_json_entry(claim):
         if claim.status == Claim.STATUS_CHECKED:
             # If status checked add categorized=False
             current_json["claim_ai_quality"] = _empty_ai_quality_json()
-        elif claim.status in (Claim.STATUS_PROCESSED, Claim.STATUS_VALUATED, Claim.STATUS_REJECTED):
+        elif claim.status in (Claim.STATUS_PROCESSED, Claim.STATUS_VALUATED):
             # Claims that were processed, valuated or rejected are considered categorized
             current_json["claim_ai_quality"] = _claim_ai_quality_json(claim)
+        elif claim.status == Claim.STATUS_REJECTED:
+            current_json["claim_ai_quality"] = _rejected_claim_ai_quality_json(claim)
         elif claim.status == Claim.STATUS_ENTERED:
             # No categorization for claims that were just entered
             pass

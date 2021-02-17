@@ -9,17 +9,9 @@ from django.dispatch import dispatcher
 
 from claim_ai_quality.ai_evaluation import create_base_communication_interface, send_claims
 from claim_ai_quality.apps import ClaimAiQualityConfig
-
+from .utils import add_json_ext_to_all_submitted_claims
 
 logger = logging.getLogger(__name__)
-
-
-def get_base_claim_ai_json_extension():
-    return {
-        "was_categorized": False,
-        "request_time": "None",
-        "response_time": "None"
-    }
 
 
 def _send_submitted_claims(submitted_claims_bundle):
@@ -35,14 +27,6 @@ def _send_submitted_claims(submitted_claims_bundle):
         .run_until_complete(send_claims(communication_interface, submitted_claims_bundle))
 
 
-def get_rejected_claim_json_extension(claim):
-    return {
-        "was_categorized": True,
-        "request_time": str(claim.validity_from),
-        "response_time": str(claim.validity_from)
-    }
-
-
 def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     mutation_type = sender._mutation_class
 
@@ -56,19 +40,10 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     if not uuids:
         return []
 
-    claims = Claim.objects.filter(uuid__in=uuids).all()
-    for claim in claims:
-        json_ext = claim.json_ext or {}
-        if claim.status != Claim.STATUS_REJECTED:
-            ai_quality_json_entry = get_base_claim_ai_json_extension()
-        else:
-            ai_quality_json_entry = get_rejected_claim_json_extension(claim)
-        json_ext['claim_ai_quality'] = ai_quality_json_entry
-        claim.json_ext = json_ext
-        claim.save()
+    all_submitted_claims = add_json_ext_to_all_submitted_claims()
 
     if ClaimAiQualityConfig.event_based_activation:
-        _send_submitted_claims(claims)
+        _send_submitted_claims(all_submitted_claims)
 
     return []
 
