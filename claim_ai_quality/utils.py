@@ -1,5 +1,6 @@
 from claim.models import Claim
-from django.db.models import Q
+from django.db.models import Q, TextField
+from django.db.models.functions import Cast
 
 
 def get_rejected_claim_json_extension(claim):
@@ -8,6 +9,7 @@ def get_rejected_claim_json_extension(claim):
         "request_time": str(claim.validity_from),
         "response_time": str(claim.validity_from)
     }
+
 
 def get_base_claim_ai_json_extension():
     return {
@@ -21,8 +23,9 @@ def add_json_ext_to_all_submitted_claims():
     all_submitted_claims = Claim.objects\
         .filter(
             status__in=(Claim.STATUS_CHECKED, Claim.STATUS_REJECTED),
-            validity_to__isnull=True)\
-        .all()
+            validity_to__isnull=True) \
+        .annotate(ext_as_str=Cast('json_ext', TextField()))\
+        .exclude(ext_as_str__icontains='claim_ai_quality')
 
     for claim in all_submitted_claims:
         json_ext = claim.json_ext or {}
