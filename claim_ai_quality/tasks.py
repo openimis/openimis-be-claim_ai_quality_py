@@ -6,7 +6,7 @@ from celery import shared_task
 
 from .ai_evaluation import send_claims, create_base_communication_interface
 from .apps import ClaimAiQualityConfig
-
+from .utils import add_json_ext_to_all_submitted_claims
 
 logger = logging.getLogger(__name__)
 
@@ -30,5 +30,7 @@ def ai_evaluation():
 def claim_ai_processing():
     # In case of event based activation claims are sent after submision
     if not ClaimAiQualityConfig.event_based_activation:
+        # Ensure json_ext fields are available
+        add_json_ext_to_all_submitted_claims()
         asyncio.new_event_loop()
         ai_evaluation()
