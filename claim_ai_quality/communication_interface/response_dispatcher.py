@@ -5,7 +5,6 @@ from abc import ABC
 from typing import Callable, Dict
 
 from asgiref.sync import sync_to_async
-from claim_ai import FHIRConverter
 from django.db import transaction
 
 

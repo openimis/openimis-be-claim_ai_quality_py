@@ -1,4 +1,5 @@
 import concurrent.futures
+import logging
 
 from typing import List
 from api_fhir_r4.models import Bundle, BundleType, BundleEntry
@@ -6,6 +7,7 @@ from api_fhir_r4.serializers import ClaimSerializer
 from django.db.models import Model
 from claim_ai_quality.communication_interface.fhir._claim_response_converter import ClaimResponseConverter
 
+logger = logging.getLogger(__name__)
 
 class ClaimBundleConverter:
 
@@ -50,7 +52,27 @@ class ClaimBundleConverter:
 
     def _build_bundle_entry(self, bundle, data):
         for obj in data:
-            entry = BundleEntry()
-            entry = entry.toDict()
-            entry['resource'] = obj
-            bundle['entry'].append(entry)
+            try:
+                items = obj.get('item', [])
+                if not items:
+                    continue
+                for item in items:
+                    self._item_float_values(item)
+
+                for contained in obj['contained']:
+                    if contained['resourceType'] in ('Medication', 'ActivityDefinition'):
+                        self._extension_float(contained['extension'])
+                entry = BundleEntry()
+                entry = entry.toDict()
+                entry['resource'] = obj
+                bundle['entry'].append(entry)
+            except Exception as e:
+                logger.warning("Error while adding entry to bundle, ", e)
+
+    def _item_float_values(self, item):
+        item['quantity']['value'] = float(item['quantity']['value'])
+        item['unitPrice']['value'] = float(item['unitPrice']['value'])
+
+    def _extension_float(self, extensions):
+        extension = next(ext for ext in extensions if ext['url'] == 'unitPrice')
+        extension['valueMoney']['value'] = float(extension['valueMoney']['value'])

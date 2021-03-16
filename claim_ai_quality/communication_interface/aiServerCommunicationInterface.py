@@ -1,19 +1,12 @@
 import asyncio
-import concurrent.futures
-import functools
-import json
 import uuid
-import time
 
 from asgiref.sync import sync_to_async
-from channels.db import database_sync_to_async
 from claim.models import Claim
 from itertools import groupby
 from datetime import datetime
-from core.websocket import AsyncWebSocketClient
 from django.core.paginator import Paginator
 
-from . import ClaimBundleConverter
 from . import AIResponsePayloadHandlerMixin
 from .websocket import AbstractFHIRWebSocket
 from ..apps import ClaimAiQualityConfig
@@ -23,16 +16,18 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
 
     async def send_all(self):
         self.response_query = {}
-
         data = await self._get_imis_data()  # generator of paginated data
         next_bundle = await self._get_from_iterator(data)  # first bundle of claims
 
         while next_bundle:
-            bundle_id = str(uuid.uuid4())
-            self.response_query[bundle_id] = 'Sent'
-            self.send_bundle(next_bundle, bundle_id)
+            asyncio.ensure_future(self.__async_bundle_send(next_bundle))
             next_bundle = await self._get_from_iterator(data)
-            await self.sustain_connection()
+
+    async def __async_bundle_send(self, next_bundle):
+        bundle_id = str(uuid.uuid4())
+        self.response_query[bundle_id] = 'Sent'
+        self.send_bundle(next_bundle, bundle_id)
+        await self.sustain_connection()
 
     async def on_receive(self, message):
         await self.__dispatch(message)
@@ -59,19 +54,21 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
         task = asyncio.create_task(coro)
         return await task
 
-    @database_sync_to_async
+    @sync_to_async
     def _get_imis_data(self):
         queryset = Claim.objects\
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}},
                     validity_to__isnull=True)\
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'request_time': None}}) \
+            .prefetch_related("items") \
+            .prefetch_related("services") \
             .order_by('id')\
             .all()
         paginator = Paginator(queryset, ClaimAiQualityConfig.bundle_size)
         for page in range(1, paginator.num_pages + 1):
             yield paginator.page(page).object_list
 
-    @database_sync_to_async
+    @sync_to_async
     def _get_from_iterator(self, queryset):
         chunk = next(queryset, None)
         if not chunk:
