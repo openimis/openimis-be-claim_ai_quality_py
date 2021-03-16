@@ -1,9 +1,13 @@
+import logging
 from datetime import datetime
 
 from claim.models import Claim, ClaimDetail
 from django.db import transaction
+from medical.models import Item, Service
 
 from claim_ai_quality.apps import ClaimAiQualityConfig
+
+logger = logging.getLogger(__name__)
 
 
 class ClaimResponseConverter:
@@ -11,18 +15,21 @@ class ClaimResponseConverter:
     @transaction.atomic
     def update_claim(self, claim_response: dict):
         # change claim status to select for review if any rejected items
-        claim = Claim.objects.get(uuid=claim_response['id'], validity_to__isnull=True)
-        if self._response_have_rejected_items(claim_response):
-            claim.save_history()
-            self.__set_evaluated_review_status(claim)
+        try:
+            claim = Claim.objects.get(uuid=claim_response['id'], validity_to__isnull=True)
+            if self._response_have_rejected_items(claim_response):
+                self.__set_evaluated_review_status(claim)
 
-        # update item status
-        self._update_items_status(claim, claim_response)
+            # update item status
+            self._update_items_status(claim, claim_response)
 
-        # json_ext update
-        self._update_claim_json_ext(claim)
-        claim.save()
-        return claim.uuid
+            # json_ext update
+            self._update_claim_json_ext(claim)
+            claim.save()
+            return claim.uuid
+        except Exception as e:
+            logger.error(F'Exception occurred during update, reason: {e}')
+            return None
 
     def __set_evaluated_review_status(self, claim: Claim):
         claim.review_status = Claim.REVIEW_SELECTED
@@ -37,7 +44,8 @@ class ClaimResponseConverter:
     def _update_items_status(self, claim, claim_response):
         for item in claim_response['item']:
             provided = self._get_claim_item_by_claim_response_item(claim, item)
-            provided.save_history()
+            if provided is None:
+                continue
             adjudication = self._get_item_adjudication(item)
 
             # change item status and service status to rejected if adjudication.category == 1
@@ -74,4 +82,9 @@ class ClaimResponseConverter:
             provided = claim.services.filter(service__uuid=item_id, validity_to__isnull=True).first()
         else:
             raise ValueError(F"Invalid provided item of type: {category}")
+
+        if provided is None:
+            model = Item if category == 'Medication' else Service
+            item = model.objects.filter(uuid=item_id).first()
+            logger.warning(F"Couldn't match item {item.code} ({item.name}) with claim {claim.code}")
         return provided
