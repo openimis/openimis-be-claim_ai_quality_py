@@ -7,7 +7,7 @@ from core import TimeUtils
 from itertools import groupby
 from datetime import datetime
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import transaction, utils as dbUtils
 
 from . import AIResponsePayloadHandlerMixin
 from .websocket import AbstractFHIRWebSocket
@@ -61,28 +61,28 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
         return await task
 
     def _get_imis_data(self):
-        l = []
-        for x in range(15200, 15380):
-            l.append(x)
-        print(l)
-        queryset = Claim.objects\
+        queryset = Claim.objects \
+            .select_for_update() \
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}},
                     validity_to__isnull=True)\
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'request_time': None}}) \
-            .filter(id__in=l) \
-            .prefetch_related("items") \
-            .prefetch_related("services") \
-            .order_by('id')
+            .iterator()
 
         next_set = []
-        for obj in queryset:
-            if len(next_set) >= ClaimAiQualityConfig.bundle_size:
-                yield list(next_set)
-                next_set = []
-            next_set.append(obj)
+        try:
+            for obj in queryset:
+                if len(next_set) >= ClaimAiQualityConfig.bundle_size:
+                    yield list(next_set)
+                    next_set = []
+                next_set.append(obj)
+        except dbUtils.Error:
+            # using queryset iterator with SQL Server results in raise of django.db.utils.Error
+            # ('HY010', '[HY010] [unixODBC][Driver Manager]Function sequence error (0) (SQLFetch)')
+            pass
         yield list(next_set)
 
     @sync_to_async
+    @transaction.atomic
     def _get_from_iterator(self, queryset):
         chunk = next(queryset, None)
         if not chunk:
