@@ -3,11 +3,11 @@ from django.apps import AppConfig
 MODULE_NAME = 'claim_ai_quality'
 
 DEFAULT_CONFIG = {
-    "claim_ai_url": "ws://localhost:8000/claim_ai/ws/Claim/process/",
+    "claim_ai_url": "ws://localhost:8001/api/claim_ai/ws/Claim/process/",
     "event_based_activation": False,
     "bundle_size": 100,
     "zip_bundle": False,
-    "connection_timeout": 5,
+    "connection_timeout": 15,
     "authentication_token": '',
     "accepted_category_code": 0,
     "rejected_category_code": 1,
