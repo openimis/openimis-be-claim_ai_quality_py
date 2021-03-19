@@ -3,9 +3,11 @@ import uuid
 
 from asgiref.sync import sync_to_async
 from claim.models import Claim
+from core import TimeUtils
 from itertools import groupby
 from datetime import datetime
 from django.core.paginator import Paginator
+from django.db import transaction, utils as dbUtils
 
 from . import AIResponsePayloadHandlerMixin
 from .websocket import AbstractFHIRWebSocket
@@ -16,18 +18,22 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
 
     async def send_all(self):
         self.response_query = {}
-        data = await self._get_imis_data()  # generator of paginated data
-        next_bundle = await self._get_from_iterator(data)  # first bundle of claims
+        data = self._get_imis_data()  # generator of paginated data
 
-        while next_bundle:
-            asyncio.ensure_future(self.__async_bundle_send(next_bundle))
+        while True:
             next_bundle = await self._get_from_iterator(data)
+            if next_bundle:
+                asyncio.ensure_future(self.__async_bundle_send(next_bundle))
+                pass
+            else:
+                break
+
+        await self.sustain_connection()
 
     async def __async_bundle_send(self, next_bundle):
         bundle_id = str(uuid.uuid4())
         self.response_query[bundle_id] = 'Sent'
         self.send_bundle(next_bundle, bundle_id)
-        await self.sustain_connection()
 
     async def on_receive(self, message):
         await self.__dispatch(message)
@@ -45,7 +51,7 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.send_data_bundle(bundle, data_type='claim.bundle.payload', bundle_id=bundle_id))
         for claim in bundle:
-            claim.json_ext['claim_ai_quality']['request_time'] = datetime.now()
+            asyncio.ensure_future(self._save_claim_request_time(claim.id))
 
         asyncio.ensure_future(task)
 
@@ -54,21 +60,29 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
         task = asyncio.create_task(coro)
         return await task
 
-    @sync_to_async
     def _get_imis_data(self):
-        queryset = Claim.objects\
+        queryset = Claim.objects \
+            .select_for_update() \
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'was_categorized': False}},
                     validity_to__isnull=True)\
             .filter(json_ext__jsoncontains={'claim_ai_quality': {'request_time': None}}) \
-            .prefetch_related("items") \
-            .prefetch_related("services") \
-            .order_by('id')\
-            .all()
-        paginator = Paginator(queryset, ClaimAiQualityConfig.bundle_size)
-        for page in range(1, paginator.num_pages + 1):
-            yield paginator.page(page).object_list
+            .iterator()
+
+        next_set = []
+        try:
+            for obj in queryset:
+                if len(next_set) >= ClaimAiQualityConfig.bundle_size:
+                    yield list(next_set)
+                    next_set = []
+                next_set.append(obj)
+        except dbUtils.Error:
+            # using queryset iterator with SQL Server results in raise of django.db.utils.Error
+            # ('HY010', '[HY010] [unixODBC][Driver Manager]Function sequence error (0) (SQLFetch)')
+            pass
+        yield list(next_set)
 
     @sync_to_async
+    @transaction.atomic
     def _get_from_iterator(self, queryset):
         chunk = next(queryset, None)
         if not chunk:
@@ -93,3 +107,9 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
                 break
             await asyncio.sleep(0)
             continue
+
+    @sync_to_async
+    def _save_claim_request_time(self, claim_id):
+        claim = Claim.objects.get(id=claim_id)
+        claim.json_ext['claim_ai_quality']['request_time'] = str(TimeUtils.now())
+        claim.save()
