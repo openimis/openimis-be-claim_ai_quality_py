@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
 from itertools import groupby
+
 from core import TimeUtils
 from claim.models import Claim, ClaimDetail
 from django.db import transaction
@@ -17,7 +17,12 @@ class ClaimResponseConverter:
     def update_claim(self, claim_response: dict):
         # change claim status to select for review if any rejected items
         try:
+            if claim_response.get("error", None):
+                self._log_claim_evaluation_error(claim_response)
+                return
+
             claim = Claim.objects.select_for_update().get(uuid=claim_response['id'], validity_to__isnull=True)
+
             if self._response_have_rejected_items(claim_response):
                 self.__set_evaluated_review_status(claim)
 
@@ -109,3 +114,11 @@ class ClaimResponseConverter:
         provided.json_ext = json_ext
         provided.validity_from = TimeUtils.now()
         provided.save()
+
+    def _log_claim_evaluation_error(self, claim_response):
+        path = ClaimAiQualityConfig.claim_evaluation_error_log_path
+        with open(path, 'a') as f:
+            error_message = claim_response['error'][0]['text']
+            claim_id = claim_response['id']
+            f.write(f'Claim [{claim_id}] evaluation failed, error: {error_message}\n')
+        return
