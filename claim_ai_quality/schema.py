@@ -9,7 +9,7 @@ from django.dispatch import dispatcher
 
 from claim_ai_quality.ai_evaluation import create_base_communication_interface, send_claims
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from .utils import add_json_ext_to_all_submitted_claims
+from .utils import add_json_ext_to_all_submitted_claims, reset_sent_but_not_evaluated_claims
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ def _send_submitted_claims(submitted_claims_bundle):
         logger.info("No claims submitted for AI evaluation")
         return
 
+    reset_sent_but_not_evaluated_claims()
     communication_interface = create_base_communication_interface()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

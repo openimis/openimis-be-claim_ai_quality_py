@@ -6,12 +6,13 @@ from celery import shared_task
 
 from .ai_evaluation import send_claims, create_base_communication_interface
 from .apps import ClaimAiQualityConfig
-from .utils import add_json_ext_to_all_submitted_claims
+from .utils import add_json_ext_to_all_submitted_claims, reset_sent_but_not_evaluated_claims
 
 logger = logging.getLogger(__name__)
 
 
 def ai_evaluation():
+    reset_sent_but_not_evaluated_claims()
     communication_interface = create_base_communication_interface()
     try:
         # Scheduled job require new loop
