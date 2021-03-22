@@ -19,14 +19,19 @@ class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIR
     async def send_all(self):
         self.response_query = {}
         data = self._get_imis_data()  # generator of paginated data
+        data_sent = False
 
         while True:
             next_bundle = await self._get_from_iterator(data)
             if next_bundle:
+                data_sent = True
                 asyncio.ensure_future(self.__async_bundle_send(next_bundle))
                 pass
             else:
-                break
+                if data_sent:
+                    break
+                else:
+                    return
 
         await self.sustain_connection()
 

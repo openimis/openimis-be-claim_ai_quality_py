@@ -2,6 +2,12 @@ adjudication_bundle = {
     'resourceType': 'AdjudicationBundle',
     'entry': [
         {
+            'fullUrl': 'localhost',
+            'resource': {
+                "resourceType": 'ClaimResponse',
+                "status": 'active',
+                "type": {'text': "R"},
+                "outcome": 'complete',
                 "insurer": {
                     "reference": "Organization/openIMIS-Claim-AI"
                 },
@@ -89,15 +95,16 @@ adjudication_bundle = {
                 ],
                 "use": "claim"
             }
+        }
     ]
 }
 
 
 def custom_bundle(claim_uuid, item_uuid, service_uuid):
     bundle = adjudication_bundle.copy()
-    claim = bundle['entry'][0]
+    claim = bundle['entry'][0]['resource']
     claim['id'] = claim_uuid
     claim['item'][0]['extension'][0]['valueReference']['reference'] = F'Medication/{item_uuid}'
     claim['item'][1]['extension'][0]['valueReference']['reference'] = F'ActivityDefinition/{service_uuid}'
-    bundle['entry'][0] = claim
+    bundle['entry'][0]['resource'] = claim
     return bundle
