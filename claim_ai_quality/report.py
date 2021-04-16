@@ -26,7 +26,9 @@ class CodeStringRepresentation:
 
     AI_RESULT = {
         '1': 'Accepted',
-        '2': 'Rejected'
+         1: 'Accepted',
+        '2': 'Rejected',
+         2: 'Rejected'
     }
 
 
@@ -104,9 +106,9 @@ class MisclassificationReportBuilder:
             'hf_name': claim.health_facility.name,
             'location_name': claim.health_facility.location.name,
             'location_code': claim.health_facility.location.code,
-            'date': datetime.strftime(claim.date_claimed, ClaimAiQualityConfig.date_format),
-            'visit_from': datetime.strftime(claim.date_from, ClaimAiQualityConfig.date_format),
-            'visit_to': datetime.strftime(claim.date_to, ClaimAiQualityConfig.date_format),
+            'date': datetime.strftime(claim.date_claimed, ClaimAiQualityConfig.date_format) if claim.date_claimed else "",
+            'visit_from': datetime.strftime(claim.date_from, ClaimAiQualityConfig.date_format) if claim.date_from else "",
+            'visit_to': datetime.strftime(claim.date_to, ClaimAiQualityConfig.date_format) if claim.date_to else "",
             'insuree_number': insuree.chf_id,
             'insuree_name': F"{insuree.other_names} {insuree.last_name}",
             'claim_admin': F"{admin.other_names} {admin.last_name}",

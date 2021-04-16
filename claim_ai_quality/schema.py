@@ -31,7 +31,7 @@ def _send_submitted_claims(submitted_claims_bundle):
 def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     mutation_type = sender._mutation_class
 
-    if not mutation_type == SubmitClaimsMutation._mutation_class or kwargs.get('error_messages', None):
+    if not mutation_type == SubmitClaimsMutation._mutation_class:
         return []
 
     uuids = kwargs['data'].get('uuids', [])
@@ -44,7 +44,7 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     claims = Claim.objects.filter(uuid__in=uuids)
     all_submitted_claims = add_json_ext_to_all_submitted_claims()
     for c in claims.all():
-        if c not in all_submitted_claims:
+        if c not in all_submitted_claims and c.status == Claim.STATUS_CHECKED:
             all_submitted_claims.append(c)
 
     if ClaimAiQualityConfig.event_based_activation:
