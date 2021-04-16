@@ -54,8 +54,10 @@ def reset_sent_but_not_evaluated_claims():
             claim.save()
 
 
+@transaction.atomic
 def add_json_ext_to_all_submitted_claims():
     all_submitted_claims = Claim.objects\
+        .select_for_update()\
         .filter(
             status__in=(Claim.STATUS_CHECKED, Claim.STATUS_REJECTED),
             validity_to__isnull=True) \
@@ -76,4 +78,4 @@ def add_json_ext_to_all_submitted_claims():
         claim.json_ext = json_ext
         claim.save()
 
-    return all_submitted_claims
+    return list(all_submitted_claims)

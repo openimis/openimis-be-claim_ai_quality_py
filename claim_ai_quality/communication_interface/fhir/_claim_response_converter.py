@@ -56,6 +56,8 @@ class ClaimResponseConverter:
 
     def _update_claim_json_ext(self, claim):
         json_ext = claim.json_ext or {}
+        if not json_ext.get('claim_ai_quality', None):
+            json_ext['claim_ai_quality'] = {}
         json_ext['claim_ai_quality']['was_categorized'] = True
         json_ext['claim_ai_quality']['response_time'] = str(TimeUtils.now())
         claim.json_ext = json_ext
