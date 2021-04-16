@@ -41,7 +41,11 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     if not uuids:
         return []
 
+    claims = Claim.objects.filter(uuid__in=uuids)
     all_submitted_claims = add_json_ext_to_all_submitted_claims()
+    for c in claims.all():
+        if c not in all_submitted_claims:
+            all_submitted_claims.append(c)
 
     if ClaimAiQualityConfig.event_based_activation:
         _send_submitted_claims(all_submitted_claims)
