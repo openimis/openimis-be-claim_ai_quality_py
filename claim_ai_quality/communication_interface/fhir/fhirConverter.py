@@ -30,14 +30,11 @@ class ClaimBundleConverter:
         return bundle
 
     def update_claims_by_response_bundle(self, claim_response_bundle: dict):
-        processes = []
         updated_claims = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            for claim in claim_response_bundle['entry']:
-                processes.append(executor.submit(self.claim_response_converter.update_claim, claim['resource']))
-
-            for update in concurrent.futures.as_completed(processes):
-                updated_claims.append(update.result())
+        for claim in claim_response_bundle['entry']:
+            updated_claims.append(
+                self.claim_response_converter.update_claim(claim['resource'])
+            )
 
         return updated_claims
 

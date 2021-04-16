@@ -31,8 +31,8 @@ def _send_submitted_claims(submitted_claims_bundle):
 def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     mutation_type = sender._mutation_class
 
-    if not mutation_type == SubmitClaimsMutation._mutation_class:
-        return
+    if not mutation_type == SubmitClaimsMutation._mutation_class or kwargs.get('error_messages', None):
+        return []
 
     uuids = kwargs['data'].get('uuids', [])
     if not uuids:
