@@ -126,7 +126,7 @@ class MisclassificationReportBuilder:
         self.missclassified_records = []
 
     def _categorize_item_status(self, claim_status, ai_result):
-        statuses = (claim_status, ai_result)
+        statuses = (claim_status, str(ai_result))
         if statuses == (ClaimDetail.STATUS_PASSED, '1'):
             self.true_positive += 1
             return True
