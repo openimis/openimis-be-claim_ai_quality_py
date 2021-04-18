@@ -42,7 +42,7 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
         return []
 
     claims = Claim.objects.filter(uuid__in=uuids)
-    add_json_ext_to_all_submitted_claims()
+    add_json_ext_to_all_submitted_claims(claims)
     claims_for_evaluation = []
     for c in claims.all():
         if c.status == Claim.STATUS_CHECKED:
