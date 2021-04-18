@@ -67,14 +67,15 @@ def add_json_ext_to_items_and_services(claim):
 
 
 @transaction.atomic
-def add_json_ext_to_all_submitted_claims():
-    all_submitted_claims = Claim.objects\
-        .select_for_update()\
-        .filter(
-            status__in=(Claim.STATUS_CHECKED, Claim.STATUS_REJECTED),
-            validity_to__isnull=True) \
-        .annotate(ext_as_str=Cast('json_ext', TextField()))\
-        .exclude(ext_as_str__icontains='claim_ai_quality')
+def add_json_ext_to_all_submitted_claims(all_submitted_claims=None):
+    if all_submitted_claims is None:
+        all_submitted_claims = Claim.objects\
+            .select_for_update()\
+            .filter(
+                status__in=(Claim.STATUS_CHECKED, Claim.STATUS_REJECTED),
+                validity_to__isnull=True) \
+            .annotate(ext_as_str=Cast('json_ext', TextField()))\
+            .exclude(ext_as_str__icontains='claim_ai_quality')
 
     claims_for_ai_evaluation = []
     for claim in all_submitted_claims:
