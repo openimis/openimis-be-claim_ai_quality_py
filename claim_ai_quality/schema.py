@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 from datetime import datetime
 
 from claim.gql_mutations import SubmitClaimsMutation
@@ -49,7 +50,10 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
             claims_for_evaluation.append(c)
 
     if ClaimAiQualityConfig.event_based_activation:
-        _send_submitted_claims(claims_for_evaluation)
+        t = threading.Thread(target=_send_submitted_claims,
+                             args=[claims_for_evaluation])
+        t.setDaemon(True)
+        t.start()
 
     return []
 
