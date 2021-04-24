@@ -10,6 +10,7 @@ from typing import Iterable
 
 from claim_ai_quality.apps import ClaimAiQualityConfig
 
+
 class CodeStringRepresentation:
     CLAIM_STATUS = {
         1: 'Rejected',
