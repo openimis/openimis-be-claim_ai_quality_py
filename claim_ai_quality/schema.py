@@ -88,8 +88,8 @@ def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
         return []
 
     claims = Claim.objects.filter(uuid__in=uuids)
-    send_claims_to_evaluation(claims)
-    return []
+    errors = send_claims_to_evaluation(claims)
+    return errors or []
 
 
 def bind_signals():
