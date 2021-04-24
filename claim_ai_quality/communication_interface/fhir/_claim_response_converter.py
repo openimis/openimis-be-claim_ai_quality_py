@@ -21,8 +21,7 @@ class ClaimResponseConverter:
                 self._log_claim_evaluation_error(claim_response)
                 return
 
-            claim = Claim.objects.select_for_update().get(uuid=claim_response['id'], validity_to__isnull=True)
-
+            claim = Claim.objects.select_for_update().get(id=int(claim_response['id']), validity_to__isnull=True)
             if self._response_have_rejected_items(claim_response):
                 self.__set_evaluated_review_status(claim)
 
@@ -76,13 +75,13 @@ class ClaimResponseConverter:
         if category == 'Medication':
             provided = claim.items \
                 .select_for_update() \
-                .filter(item__uuid=item_id, validity_to__isnull=True)\
+                .filter(item__id=int(item_id), validity_to__isnull=True)\
                 .order_by('validity_from')\
                 .first()
         elif category == 'ActivityDefinition':
             provided = claim.services \
                 .select_for_update() \
-                .filter(service__uuid=item_id, validity_to__isnull=True)\
+                .filter(service__id=int(item_id), validity_to__isnull=True)\
                 .order_by('validity_from')\
                 .first()
         else:
