@@ -2,16 +2,37 @@ import asyncio
 import logging
 from datetime import datetime
 
+import graphene
 from claim.gql_mutations import SubmitClaimsMutation
-from core.schema import signal_mutation_module_after_mutating
+from core.schema import signal_mutation_module_after_mutating, signal_mutation_module_validate
 from claim.models import Claim
 from django.dispatch import dispatcher
 
 from claim_ai_quality.ai_evaluation import create_base_communication_interface, send_claims
 from claim_ai_quality.apps import ClaimAiQualityConfig
+from .gql_mutations import EvaluateByAIMutation, send_claims_to_evaluation
+from .models import ClaimAiQualityMutation
 from .utils import add_json_ext_to_all_submitted_claims, reset_sent_but_not_evaluated_claims
 
 logger = logging.getLogger(__name__)
+
+
+class Mutation(graphene.ObjectType):
+    send_claims_for_ai_evaluation = EvaluateByAIMutation.Field()
+
+
+def on_claim_ai_evaluation_mutation(sender, **kwargs):
+    uuids = kwargs['data'].get('uuids', [])
+    if not uuids:
+        uuid = kwargs['data'].get('claim_uuid', None)
+        uuids = [uuid] if uuid else []
+    if not uuids:
+        return []
+    impacted_claims = Claim.objects.filter(uuid__in=uuids).all()
+    for claim in impacted_claims:
+        ClaimAiQualityMutation.objects.create(
+            claim=claim, mutation_id=kwargs['mutation_log_id'])
+    return []
 
 
 def _send_submitted_claims(submitted_claims_bundle):
@@ -28,7 +49,7 @@ def _send_submitted_claims(submitted_claims_bundle):
         .run_until_complete(send_claims(communication_interface, submitted_claims_bundle))
 
 
-def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
+def on_claim_submit_mutation(sender: dispatcher.Signal, **kwargs):
     mutation_type = sender._mutation_class
 
     if not mutation_type == SubmitClaimsMutation._mutation_class or kwargs.get('error_messages', None):
@@ -53,5 +74,25 @@ def on_claim_mutation(sender: dispatcher.Signal, **kwargs):
     return []
 
 
+def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
+    mutation_type = sender._mutation_class
+
+    if not mutation_type == EvaluateByAIMutation._mutation_class:
+        return []
+
+    uuids = kwargs['data'].get('uuids', [])
+    if not uuids:
+        uuid = kwargs['data'].get('claim_uuid', None)
+        uuids = [uuid] if uuid else []
+    if not uuids:
+        return []
+
+    claims = Claim.objects.filter(uuid__in=uuids)
+    send_claims_to_evaluation(claims)
+    return []
+
+
 def bind_signals():
-    signal_mutation_module_after_mutating["claim"].connect(on_claim_mutation)
+    signal_mutation_module_validate["claim_ai_quality"].connect(on_claim_ai_evaluation_mutation)
+    signal_mutation_module_after_mutating["claim_ai_quality"].connect(after_claim_ai_evaluation_validation)
+    signal_mutation_module_after_mutating["claim"].connect(on_claim_submit_mutation)
