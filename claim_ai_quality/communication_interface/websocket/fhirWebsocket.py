@@ -2,13 +2,12 @@ import asyncio
 import functools
 import concurrent.futures
 import logging
-import uuid
 
 from abc import ABC
 
 from typing import List
 
-from asgiref.sync import sync_to_async
+import traceback
 from django.db.models import Model
 
 from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBundleConverter
@@ -61,10 +60,16 @@ class AbstractFHIRWebSocket(ABC):
             executor.submit(self._send, data_bundle, data_type, **kwargs)
 
     def _send(self, data_bundle, data_type='data_bundle', **payload_args):
-        fhir_obj = self.fhir_converter.build_claim_bundle(data_bundle)
-        payload = {'type': data_type, 'content': fhir_obj, **payload_args}
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(self.server_client.send(payload))
+        try:
+            fhir_obj = self.fhir_converter.build_claim_bundle(data_bundle)
+            payload = {'type': data_type, 'content': fhir_obj, **payload_args}
+            loop = asyncio.new_event_loop()
+            loop.run_until_complete(self.server_client.send(payload))
+        except Exception as e:
+            logger.error(F"Error ocurred during payload fhir transformation, error: {e}")
+            logger.debug(traceback.format_exc())
+            self.close_connection()
+            self.connection_lost = True
 
     async def on_receive(self, message):
         raise NotImplementedError("on_receive has to implemented")

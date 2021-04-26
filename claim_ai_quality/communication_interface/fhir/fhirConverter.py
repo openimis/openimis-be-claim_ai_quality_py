@@ -5,17 +5,21 @@ from typing import List
 from claim.models import Claim, ClaimItem, ClaimService
 from api_fhir_r4.models import Bundle, BundleType, BundleEntry
 from api_fhir_r4.serializers import ClaimSerializer
+from api_fhir_r4.converters import ReferenceConverterMixin
 from django.db.models import Model
-from medical.models import Item, Service
 
 from claim_ai_quality.communication_interface.fhir._claim_response_converter import ClaimResponseConverter
 
 logger = logging.getLogger(__name__)
 
+
 class ClaimBundleConverter:
+    FHIR_REFERENCE_TYPE = ReferenceConverterMixin.DB_ID_REFERENCE_TYPE
 
     def __init__(self, fhir_serializer: ClaimSerializer):
         self.fhir_serializer = fhir_serializer
+        self.fhir_serializer.reference_type = self.FHIR_REFERENCE_TYPE
+
         self.claim_response_converter = ClaimResponseConverter()
         self.fhir_serializer.context['contained'] = True
 
@@ -25,7 +29,9 @@ class ClaimBundleConverter:
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             for claim in claims:
                 if claim.status == Claim.STATUS_CHECKED:
-                    processes.append(executor.submit(self.fhir_serializer.to_representation, claim))
+                    processes.append(executor.submit(
+                        self.fhir_serializer.to_representation, claim
+                    ))
 
             for claim_convert in concurrent.futures.as_completed(processes):
                 fhir_claims.append(claim_convert.result())
@@ -55,7 +61,7 @@ class ClaimBundleConverter:
         for obj in data:
             try:
                 items = obj.get('item', [])
-                items, contained = self._get_valid_items(items, obj['contained'], obj['id'])
+                items, contained = self._get_valid_items(items, obj['contained'], int(obj['id']))
                 obj['contained'] = contained
                 obj['item'] = items
                 if not items:
@@ -94,35 +100,36 @@ class ClaimBundleConverter:
         claim.services.set(
             exclude_rejected(claim.services.all()))
 
-    def _get_valid_items(self, items_list, contained_list, claim_uuid):
+    def _get_valid_items(self, items_list, contained_list, claim_id):
         items_uuids = [i["productOrService"]["text"]
                        for i in items_list if i['category']['text'] == 'item']
         services_uuids = [i["productOrService"]["text"]
                           for i in items_list if i['category']['text'] == 'service']
 
         valid_items = ClaimItem.objects\
-            .filter(claim__uuid=claim_uuid, item__code__in=items_uuids, validity_to=None) \
+            .filter(claim__id=claim_id, item__code__in=items_uuids, validity_to=None) \
             .filter(status=ClaimItem.STATUS_PASSED)\
             .all()\
-            .values_list('item__code', flat=True).distinct()
+            .values_list('item__id', 'item__code').distinct()
 
         valid_services = ClaimService.objects\
-            .filter(claim__uuid=claim_uuid, service__code__in=services_uuids, validity_to=None) \
+            .filter(claim__id=claim_id, service__code__in=services_uuids, validity_to=None) \
             .filter(status=ClaimService.STATUS_PASSED) \
             .all()\
-            .values_list('service__code', flat=True).distinct()
+            .values_list('service__id', 'service__code').distinct()
 
-        all_valid = list(valid_items) + list(valid_services)
+        all_valid_uuids = list([i[0] for i in valid_items]) + list([s[0] for s in valid_services])
+        all_valid_codes = list([i[1] for i in valid_items]) + list([s[1] for s in valid_services])
 
         updated_contained_list = []
         for contained in contained_list:
             if contained['resourceType'] not in ('Medication', 'ActivityDefinition'):
                 updated_contained_list.append(contained)
             elif contained['resourceType'] == 'Medication':
-                if contained['code']['coding'][0]['code'] in all_valid:
+                if int(contained['id'].split('/')[1]) in all_valid_uuids:
                     updated_contained_list.append(contained)
             else:
-                if contained['identifier'][1]['value'] in all_valid:
+                if int(contained['id'].split('/')[1]) in all_valid_uuids:
                     updated_contained_list.append(contained)
 
-        return [i for i in items_list if i["productOrService"]["text"] in all_valid], updated_contained_list
+        return [i for i in items_list if i["productOrService"]["text"] in all_valid_codes], updated_contained_list
