@@ -50,7 +50,7 @@ class AiQualityReportService(object):
         if request.get('claimDateFrom', None):
             query['date_claimed__gte'] = request.get('claimDateFrom')
         if request.get('claimCode', None):
-            query['code'] = request.get('claimCode')
+            query['code__startswith'] = request.get('claimCode')
         if request.get('claimStatus', None):
             query['status'] = request.get('claimStatus')
         if request.get('claimedUnder', None):
