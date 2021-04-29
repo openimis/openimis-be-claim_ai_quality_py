@@ -1,3 +1,5 @@
+import itertools
+
 import core
 import uuid
 from claim.models import Claim, ClaimService, ClaimItem
@@ -23,8 +25,13 @@ class AiQualityReportService(object):
                 .filter(health_facility__location_id__in=[l.location_id for l in dist]) \
 
         queryset = queryset.filter(self.CATEGORIZED_FILTER)  # exclude entered and checked claims from query
-        claims = queryset \
-            .filter(**self.build_filter(request)) \
+
+        if request.get('claimUuids', None):
+            uuids = list(map(lambda str_id: uuid.UUID(str_id), request.get('claimUuids').split(',')))
+            claims = queryset.filter(uuid__in=uuids)
+        else:
+            claims = queryset \
+                .filter(**self.build_filter(request))
 
         if not claims:
             raise PermissionDenied(_("unauthorized"))
@@ -43,7 +50,7 @@ class AiQualityReportService(object):
         if request.get('claimDateFrom', None):
             query['date_claimed__gte'] = request.get('claimDateFrom')
         if request.get('claimCode', None):
-            query['code'] = request.get('claimCode')
+            query['code__startswith'] = request.get('claimCode')
         if request.get('claimStatus', None):
             query['status'] = request.get('claimStatus')
         if request.get('claimedUnder', None):
