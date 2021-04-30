@@ -1,0 +1,1 @@
+default_app_config = 'claim_ai_quality.apps.ClaimAiQualityConfig'
