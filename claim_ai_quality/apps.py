@@ -14,7 +14,8 @@ DEFAULT_CONFIG = {
     "rejected_category_code": 1,
     "reason_rejected_by_ai_code": -2,
     "date_format": '%Y-%m-%d',
-    "claim_evaluation_error_log_path": 'claim_ai_evaluation.log'
+    "claim_evaluation_error_log_path": 'claim_ai_evaluation.log',
+    "misclassification_report_perms": ["112001"]
 }
 
 
@@ -33,6 +34,7 @@ class ClaimAiQualityConfig(AppConfig):
     date_format = DEFAULT_CONFIG['date_format']
     request_time_resend_after_hours = DEFAULT_CONFIG['request_time_resend_after_hours']
     claim_evaluation_error_log_path = DEFAULT_CONFIG['claim_evaluation_error_log_path']
+    misclassification_report_perms = DEFAULT_CONFIG['misclassification_report_perms']
 
     def _configure_perms(self, cfg):
         for config, config_value in cfg.items():
