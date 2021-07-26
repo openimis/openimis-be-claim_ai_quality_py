@@ -100,11 +100,11 @@ adjudication_bundle = {
 }
 
 
-def custom_bundle(claim_uuid, item_uuid, service_uuid):
+def custom_bundle(claim_id, item_id, service_id):
     bundle = adjudication_bundle.copy()
     claim = bundle['entry'][0]['resource']
-    claim['id'] = claim_uuid
-    claim['item'][0]['extension'][0]['valueReference']['reference'] = F'Medication/{item_uuid}'
-    claim['item'][1]['extension'][0]['valueReference']['reference'] = F'ActivityDefinition/{service_uuid}'
+    claim['id'] = claim_id
+    claim['item'][0]['extension'][0]['valueReference']['reference'] = F'Medication/{item_id}'
+    claim['item'][1]['extension'][0]['valueReference']['reference'] = F'ActivityDefinition/{service_id}'
     bundle['entry'][0]['resource'] = claim
     return bundle

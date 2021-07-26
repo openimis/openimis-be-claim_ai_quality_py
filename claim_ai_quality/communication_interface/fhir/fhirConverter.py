@@ -3,7 +3,8 @@ import logging
 
 from typing import List
 from claim.models import Claim, ClaimItem, ClaimService
-from api_fhir_r4.models import Bundle, BundleType, BundleEntry
+from fhir.resources.bundle import Bundle, BundleEntry, BundleLink
+from api_fhir_r4.models import BundleType
 from api_fhir_r4.serializers import ClaimSerializer
 from api_fhir_r4.converters import ReferenceConverterMixin
 from django.db.models import Model
@@ -32,6 +33,8 @@ class ClaimBundleConverter:
                     processes.append(executor.submit(
                         self.fhir_serializer.to_representation, claim
                     ))
+                else:
+                    logger.warning(F"Claim {claim} is not in checked status and won't be sent for AI evaluation")
 
             for claim_convert in concurrent.futures.as_completed(processes):
                 fhir_claims.append(claim_convert.result())
@@ -49,10 +52,10 @@ class ClaimBundleConverter:
         return updated_claims
 
     def _build_bundle_set(self, data):
-        bundle = Bundle()
+        bundle = Bundle.construct()
         bundle.type = BundleType.BATCH.value
         bundle.total = len(data)
-        bundle = bundle.toDict()
+        bundle = bundle.dict()
         bundle['entry'] = []
         self._build_bundle_entry(bundle, data)
         return bundle
@@ -73,7 +76,7 @@ class ClaimBundleConverter:
                     if contained['resourceType'] in ('Medication', 'ActivityDefinition'):
                         self._extension_float(contained['extension'])
                 entry = BundleEntry()
-                entry = entry.toDict()
+                entry = entry.dict()
                 entry['resource'] = obj
                 bundle['entry'].append(entry)
             except Exception as e:
