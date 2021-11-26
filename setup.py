@@ -22,7 +22,8 @@ setup(
     install_requires=[
         'django',
         'django-db-signals',
-        'djangorestframework'
+        'djangorestframework',
+        'orjson'
     ],
     classifiers=[
         'Environment :: Web Environment',

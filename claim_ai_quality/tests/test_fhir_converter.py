@@ -65,6 +65,6 @@ class TestClaimBundleConverter(TransactionTestCase):
         self.TEST_CLAIM_ITEM.save()
         self.TEST_CLAIM_SERVICE = create_test_claimservice(self.TEST_CLAIM, 'S')
         self.TEST_CLAIM_SERVICE.save()
-        self.TEST_RESPONSE_BUNDLE = custom_bundle(self.TEST_CLAIM.uuid,
-                                                  self.TEST_CLAIM_ITEM.item.uuid,
-                                                  self.TEST_CLAIM_SERVICE.service.uuid)
+        self.TEST_RESPONSE_BUNDLE = custom_bundle(self.TEST_CLAIM.id,
+                                                  self.TEST_CLAIM_ITEM.item.id,
+                                                  self.TEST_CLAIM_SERVICE.service.id)

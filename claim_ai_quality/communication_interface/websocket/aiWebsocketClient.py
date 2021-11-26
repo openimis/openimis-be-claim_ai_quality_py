@@ -1,6 +1,7 @@
 import json
 import zlib
 from uuid import UUID
+import orjson
 
 import websocket
 try:
@@ -24,7 +25,7 @@ class AiServerWebsocketClient(AsyncWebSocketClient):
             if isinstance(o, UUID):
                 return o.hex
 
-        byte_payload = json.dumps(payload, indent=2, default=uuid_convert).encode('utf-8')
+        byte_payload = orjson.dumps(payload, default=uuid_convert)  # .encode('utf-8')
         if self.compressed_payload:
             byte_payload = zlib.compress(byte_payload)
         return byte_payload
@@ -34,10 +35,11 @@ class AiServerWebsocketClient(AsyncWebSocketClient):
         Extends open_connection by adding custom headers
         """
         if not self.websocket:
-            ws = websocket.WebSocketApp(self.socket_url,
-                                        on_message=lambda ws, msg: self._on_recv(msg),
-                                        header=self._get_auth()
-                                        )
+            ws = websocket.WebSocketApp(
+                self.socket_url,
+                on_message=lambda ws, msg: self._on_recv(msg),
+                header=self._get_auth()
+            )
             self.websocket = ws
             thread.start_new_thread(self.websocket.run_forever, ())
 
