@@ -72,23 +72,18 @@ class ClaimBundleConverter:
                 for item in items:
                     self._item_float_values(item)
 
-                for contained in obj['contained']:
-                    if contained['resourceType'] in ('Medication', 'ActivityDefinition'):
-                        self._extension_float(contained['extension'])
                 entry = BundleEntry()
                 entry = entry.dict()
                 entry['resource'] = obj
                 bundle['entry'].append(entry)
             except Exception as e:
+                import traceback
+                logger.debug(traceback.format_exc())
                 logger.warning("Error while adding entry to bundle, ", e)
 
     def _item_float_values(self, item):
         item['quantity']['value'] = float(item['quantity']['value'])
         item['unitPrice']['value'] = float(item['unitPrice']['value'])
-
-    def _extension_float(self, extensions):
-        extension = next(ext for ext in extensions if ext['url'] == 'unitPrice')
-        extension['valueMoney']['value'] = float(extension['valueMoney']['value'])
 
     def _exclude_rejected_items_and_services(self, claim):
         def exclude_rejected(provision):
@@ -129,10 +124,16 @@ class ClaimBundleConverter:
             if contained['resourceType'] not in ('Medication', 'ActivityDefinition'):
                 updated_contained_list.append(contained)
             elif contained['resourceType'] == 'Medication':
-                if int(contained['id'].split('/')[1]) in all_valid_uuids:
+                if self.__get_id(contained['id']) in all_valid_uuids:
                     updated_contained_list.append(contained)
             else:
-                if int(contained['id'].split('/')[1]) in all_valid_uuids:
+                if self.__get_id(contained['id']) in all_valid_uuids:
                     updated_contained_list.append(contained)
 
         return [i for i in items_list if i["productOrService"]["text"] in all_valid_codes], updated_contained_list
+
+    def __get_id(self, id_str):
+        if '/' in id_str:
+            return int(id_str.split('/')[1])
+        else:
+            return int(id_str)
