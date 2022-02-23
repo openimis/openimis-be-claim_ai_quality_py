@@ -22,3 +22,10 @@ def claim_ai_processing():
     # In case of event based activation claims are sent after submission
     if not ClaimAiQualityConfig.event_based_activation:
         ai_evaluation()
+
+
+@shared_task(name='pull_evaluated_tasks')
+def pull_evaluated_tasks():
+    # In case of event based activation claims are sent after submission
+    if not ClaimAiQualityConfig.event_based_activation:
+        RestAIEvaluationOrganizer.pull_data_for_not_evaluated_bundles()

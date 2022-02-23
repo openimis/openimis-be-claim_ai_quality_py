@@ -38,7 +38,7 @@ class ClaimRestApiRequestClient:
         return orjson.loads(content)
 
     def get_claim_bundle(self, claim_bundle_evaluation_hash):
-        response = self._get_request(self.CLAIM_EVALUATION_ENDPOINT, claim_bundle_evaluation_hash)
+        response = self._get_request(self.BUNDLE_EVALUATION_ENDPOINT, claim_bundle_evaluation_hash)
         return orjson.loads(response.content)
 
     def _post_request(self,  endpoint_url: str, payload: dict, query_params=None):
@@ -50,14 +50,13 @@ class ClaimRestApiRequestClient:
         return requests.post(endpoint_url, data=payload_json, headers=self._get_headers())
 
     def _get_request(self, endpoint_url: str, resource_id: str, query_params=None):
-        raise NotImplementedError("To be implemented")
         if query_params is None:
             query_params = {}
 
-        parsed = urlparse(endpoint_url)
-        parsed.path = F"{parsed.path}{resource_id}/" if parsed.path.endswith('/') else F"{parsed.path}/{resource_id}/"
-        endpoint_url = parsed.geturl()
-        endpoint_url = endpoint_url + urllib.parse.urlencode(query_params)
+        if not endpoint_url.endswith('/'):
+            endpoint_url = F"{endpoint_url}/"
+        endpoint_url = F"{endpoint_url}{resource_id}"
+        endpoint_url = self.__add_qury_param(endpoint_url, query_params)
         return requests.get(endpoint_url, headers=self._get_headers())
 
     def __add_qury_param(self, url, query_params):

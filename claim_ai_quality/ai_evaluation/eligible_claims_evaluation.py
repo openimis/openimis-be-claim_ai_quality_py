@@ -17,7 +17,6 @@ class RestApiAllEligibleClaimsEvaluation:
         add_json_ext_to_all_submitted_claims()
         interface = kwargs.get('communication_interface') or cls._get_default_interface()
         wait_for_response = kwargs.get('wait_for_response') or False
-        # TODO: Use celery instead of threading
         return cls._send_all_eligible_claims_claims(interface, wait_for_response)
 
     @classmethod
