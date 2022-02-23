@@ -114,11 +114,12 @@ class ClaimResponseConverter:
             provided.status = ClaimDetail.STATUS_REJECTED
 
         # jsonExt set to true, add ai_result = adjudiction.category + 1
-        json_ext = provided.json_ext or {}
-        json_ext['claim_ai_quality'] = self._create_item_ai_quality_json_ext(adjudication)
-        provided.json_ext = json_ext
-        provided.validity_from = TimeUtils.now()
-        provided.save()
+        if adjudication == ClaimAiQualityConfig.accepted_category_code:
+            json_ext = provided.json_ext or {}
+            json_ext['claim_ai_quality'] = self._create_item_ai_quality_json_ext(adjudication)
+            provided.json_ext = json_ext
+            provided.validity_from = TimeUtils.now()
+            provided.save()
 
     def _log_claim_evaluation_error(self, claim_response):
         error_message = claim_response['error'][0]['text']
