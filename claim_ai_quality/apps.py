@@ -3,7 +3,17 @@ from django.apps import AppConfig
 MODULE_NAME = 'claim_ai_quality'
 
 DEFAULT_CONFIG = {
-    "claim_ai_url": "ws://localhost:8001/api/claim_ai/ws/Claim/process/",
+    "claim_ai_url": "ws://localhost:8000/api/claim_ai/ws/Claim/process/",
+    "rest_api_login_endpoint": "http://localhost:8000/api/api_fhir_r4/login/",
+    "rest_api_bundle_evaluation_endpoint": "http://localhost:8000/api/claim_ai/claim_bundle_evaluation/",
+    "rest_api_single_claim_evaluation_endpoint": "http://localhost:8000/api/claim_ai/claim_evaluation/",
+    "wait_for_evaluation": True,  # Determines if during sending REST Requests interface wants to wait for response.
+
+    "rest_api_base_url": "ws://localhost:8000/api/claim_ai/",
+    "rest_api_user_login": 'claim_ai_admin',  # Used for JWT Authentication on Claim AI Server
+    "rest_api_user_password": 'claim_ai_admin',  # Used for JWT Authentication on Claim AI Server
+
+    "claim_ai_username": '_ClaimAIAdmin',  # User dedicated to perform db operations on history model e.g. save
     "event_based_activation": False,
     "bundle_size": 200,
     "request_time_resend_after_hours": 15,
@@ -35,6 +45,17 @@ class ClaimAiQualityConfig(AppConfig):
     request_time_resend_after_hours = DEFAULT_CONFIG['request_time_resend_after_hours']
     claim_evaluation_error_log_path = DEFAULT_CONFIG['claim_evaluation_error_log_path']
     misclassification_report_perms = DEFAULT_CONFIG['misclassification_report_perms']
+
+    rest_api_login_endpoint = DEFAULT_CONFIG['rest_api_login_endpoint']
+    rest_api_bundle_evaluation_endpoint = DEFAULT_CONFIG['rest_api_bundle_evaluation_endpoint']
+    rest_api_single_claim_evaluation_endpoint = DEFAULT_CONFIG['rest_api_single_claim_evaluation_endpoint']
+
+    rest_api_user_login = DEFAULT_CONFIG['rest_api_single_claim_evaluation_endpoint']
+    rest_api_user_password = DEFAULT_CONFIG['rest_api_single_claim_evaluation_endpoint']
+
+    wait_for_evaluation = DEFAULT_CONFIG['wait_for_evaluation']
+
+    claim_ai_username = DEFAULT_CONFIG['claim_ai_username']
 
     def _configure_perms(self, cfg):
         for config, config_value in cfg.items():

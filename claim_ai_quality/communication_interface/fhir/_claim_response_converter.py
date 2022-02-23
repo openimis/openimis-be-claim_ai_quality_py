@@ -1,4 +1,5 @@
 import logging
+import traceback
 from itertools import groupby
 
 from core import TimeUtils
@@ -21,7 +22,7 @@ class ClaimResponseConverter:
                 self._log_claim_evaluation_error(claim_response)
                 return
 
-            claim = Claim.objects.select_for_update().get(id=int(claim_response['id']), validity_to__isnull=True)
+            claim = Claim.objects.select_for_update().get(uuid=claim_response['id'], validity_to__isnull=True)
             if self._response_have_rejected_items(claim_response):
                 self.__set_evaluated_review_status(claim)
 
@@ -31,9 +32,10 @@ class ClaimResponseConverter:
             # json_ext update
             self._update_claim_json_ext(claim)
             claim.save()
-            return claim.uuid
+            return claim
         except Exception as e:
             logger.error(F'Exception occurred during update, reason: {e}')
+            logger.debug(traceback.format_exc())
             return None
 
     def __set_evaluated_review_status(self, claim: Claim):
@@ -48,7 +50,6 @@ class ClaimResponseConverter:
 
     def _update_items_status(self, claim, claim_response):
         grouped_items = self._group_items(claim_response['item'])
-
         for provided_key, claim_provisions in grouped_items:
             for index, item in enumerate(list(claim_provisions)):
                 self._update_single_item(item, claim)
@@ -75,13 +76,13 @@ class ClaimResponseConverter:
         if category == 'Medication':
             provided = claim.items \
                 .select_for_update() \
-                .filter(item__id=int(item_id), validity_to__isnull=True)\
+                .filter(item__uuid=item_id, validity_to__isnull=True)\
                 .order_by('validity_from')\
                 .first()
         elif category == 'ActivityDefinition':
             provided = claim.services \
                 .select_for_update() \
-                .filter(service__id=int(item_id), validity_to__isnull=True)\
+                .filter(service__uuid=item_id, validity_to__isnull=True)\
                 .order_by('validity_from')\
                 .first()
         else:
@@ -90,7 +91,10 @@ class ClaimResponseConverter:
         if provided is None:
             model = Item if category == 'Medication' else Service
             item = model.objects.filter(uuid=item_id).first()
-            logger.warning(F"Couldn't match item {item.code} ({item.name}) with claim {claim.code}")
+            if not item:
+                logger.error(F"Provided identifier ({item_id}) for provision {model} is invalid.")
+            else:
+                logger.error(F"Couldn't match item {item.code} ({item.name}) with claim {claim.code}")
         return provided
 
     def _group_items(self, items):
@@ -117,9 +121,11 @@ class ClaimResponseConverter:
         provided.save()
 
     def _log_claim_evaluation_error(self, claim_response):
+        error_message = claim_response['error'][0]['text']
+        claim_id = claim_response['id']
+        logger.error(f'Claim [{claim_id}] evaluation failed, error: {error_message}\n')
+
         path = ClaimAiQualityConfig.claim_evaluation_error_log_path
         with open(path, 'a') as f:
-            error_message = claim_response['error'][0]['text']
-            claim_id = claim_response['id']
             f.write(f'Claim [{claim_id}] evaluation failed, error: {error_message}\n')
         return
