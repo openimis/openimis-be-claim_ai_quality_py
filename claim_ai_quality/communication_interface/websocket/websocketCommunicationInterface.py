@@ -9,12 +9,12 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from django.db import transaction, utils as dbUtils
 
-from . import AIResponsePayloadHandlerMixin
-from .websocket import AbstractFHIRWebSocket
-from ..apps import ClaimAiQualityConfig
+from claim_ai_quality.communication_interface import AIResponsePayloadHandlerMixin
+from claim_ai_quality.communication_interface.websocket import AbstractFHIRWebSocket
+from claim_ai_quality.apps import ClaimAiQualityConfig
 
 
-class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIRWebSocket):
+class WebsocketCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIRWebSocket):
 
     async def send_all(self):
         self.response_query = {}
