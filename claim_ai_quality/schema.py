@@ -7,7 +7,7 @@ from core.schema import signal_mutation_module_after_mutating, signal_mutation_m
 from claim.models import Claim
 from django.dispatch import dispatcher
 
-from .ai_evaluation.rest import RestAIEvaluationOrganizer
+from .ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
 from .ai_evaluation.rest_mutation_evaluation import AiMutationValidationException
 from .apps import ClaimAiQualityConfig
 from .gql_mutations import EvaluateByAIMutation

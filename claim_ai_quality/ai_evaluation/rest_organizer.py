@@ -22,7 +22,7 @@ class RestAIEvaluationOrganizer:
         Send all claims stored in system that are eligible for AI Evaluation.
         """
         return RestApiAllEligibleClaimsEvaluation\
-            .evaluate(communication_interface=cls._API_INTERFACE, wait_for_response=False)
+            .evaluate(communication_interface=cls._API_INTERFACE, wait_for_response=True)
 
     @classmethod
     def evaluate_selected_claims(cls, claims):

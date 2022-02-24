@@ -49,6 +49,7 @@ class RestCommunicationInterface:
             result = self.response_handler.update_claims_with_evaluation(response_json)
         else:
             result = self.response_handler.save_initial_claim_bundle_evaluation_result(response_json)
+            self._run_pull_evaluation_task(result)
         return result
 
     def pull_result_for_all_not_evaluated_bundles(self):
@@ -103,3 +104,11 @@ class RestCommunicationInterface:
                 if category == '-2' and value != '-2':
                     return True
         return False
+
+    @classmethod
+    def _run_pull_evaluation_task(cls, result: ClaimBundleEvaluationResult):
+        # TODO: Replace this with subscriptions based pull when available
+        from claim_ai_quality.tasks import pull_data_for_evaluation
+        PULLING_DATA_TASK = pull_data_for_evaluation
+        PULLING_DATA_TASK.delay(result.evaluation_hash, )
+        pass

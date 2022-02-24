@@ -2,7 +2,7 @@ import logging
 
 import graphene
 
-from claim_ai_quality.ai_evaluation.rest import RestAIEvaluationOrganizer
+from claim_ai_quality.ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
 from core.schema import OpenIMISMutation
 
 logger = logging.getLogger(__name__)
