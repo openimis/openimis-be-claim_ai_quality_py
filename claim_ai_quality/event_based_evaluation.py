@@ -8,17 +8,15 @@ from typing import List, Union
 from django.db.models import QuerySet
 
 from claim.models import Claim
-from claim_ai_quality.ai_evaluation import create_base_websocket_communication_interface, send_claims_websocket
-from claim_ai_quality.ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
+from claim_ai_quality.ai_evaluation import ClaimEvaluationOrganizer
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from claim_ai_quality.utils import reset_sent_but_not_evaluated_claims
 
 logger = logging.getLogger(__name__)
 
 
 def _send_submitted_claims(submitted_claims_bundle):
     try:
-        RestAIEvaluationOrganizer.evaluate_selected_claims(submitted_claims_bundle)
+        ClaimEvaluationOrganizer.evaluate_selected_claims(submitted_claims_bundle)
     except Exception as e:
         logger.error(F"Exception occurred during evaluation task: {str(e)}\n{traceback.print_exc()}")
 

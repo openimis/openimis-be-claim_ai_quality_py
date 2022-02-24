@@ -2,7 +2,7 @@ import logging
 
 import graphene
 
-from claim_ai_quality.ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
+from claim_ai_quality.ai_evaluation import ClaimEvaluationOrganizer
 from core.schema import OpenIMISMutation
 
 logger = logging.getLogger(__name__)
@@ -17,4 +17,4 @@ class EvaluateByAIMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        return RestAIEvaluationOrganizer.evaluate_claims_from_mutation(user, **data)
+        return ClaimEvaluationOrganizer.evaluate_claims_from_mutation(user, **data)

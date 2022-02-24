@@ -1,7 +1,7 @@
 from api_fhir_r4.serializers import ClaimSerializer
-from claim_ai_quality.ai_evaluation.eligible_claims_evaluation import RestApiAllEligibleClaimsEvaluation, \
+from ._rest_api.eligible_claims_evaluation import RestApiAllEligibleClaimsEvaluation, \
     RestApiEventBasedEvaluation
-from claim_ai_quality.ai_evaluation.rest_mutation_evaluation import RestApiEvaluationFromMutation
+from claim_ai_quality.ai_evaluation.mutation_evaluation import EvaluationFromMutation
 from claim_ai_quality.communication_interface import ClaimBundleConverter
 from claim_ai_quality.communication_interface.rest_api.restCommunicationInterface import RestCommunicationInterface
 
@@ -14,7 +14,7 @@ class RestAIEvaluationOrganizer:
         """
         Evaluate selected using data sent with GraphQL mutation.
         """
-        return RestApiEvaluationFromMutation.evaluate(user, **data)
+        return EvaluationFromMutation.evaluate(user, **data)
 
     @classmethod
     def evaluate_all_eligible_claims(cls):

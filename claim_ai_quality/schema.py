@@ -7,8 +7,8 @@ from core.schema import signal_mutation_module_after_mutating, signal_mutation_m
 from claim.models import Claim
 from django.dispatch import dispatcher
 
-from .ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
-from .ai_evaluation.rest_mutation_evaluation import AiMutationValidationException
+from .ai_evaluation import ClaimEvaluationOrganizer
+from claim_ai_quality.ai_evaluation.mutation_evaluation import AiMutationValidationException
 from .apps import ClaimAiQualityConfig
 from .gql_mutations import EvaluateByAIMutation
 from .models import ClaimAiQualityMutation
@@ -46,14 +46,14 @@ def on_claim_submit_mutation(sender: dispatcher.Signal, **kwargs):
     claims = Claim.objects.filter(uuid__in=uuids)
     add_json_ext_to_all_submitted_claims(claims)
     if ClaimAiQualityConfig.event_based_activation:
-        RestAIEvaluationOrganizer.evaluate_selected_claims(claims)
+        ClaimEvaluationOrganizer.evaluate_selected_claims(claims)
     return []
 
 
 def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
     def _send(claims_):
         try:
-            RestAIEvaluationOrganizer.evaluate_selected_claims(claims_)
+            ClaimEvaluationOrganizer.evaluate_selected_claims(claims_)
         except AiMutationValidationException as exc:
             return [{'message': str(exc.message), 'detail': str(exc)}]
         except Exception as e:

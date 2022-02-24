@@ -5,7 +5,7 @@ import traceback
 
 from celery import shared_task
 
-from .ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
+from .ai_evaluation import ClaimEvaluationOrganizer
 from .apps import ClaimAiQualityConfig
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def ai_evaluation():
     try:
-        RestAIEvaluationOrganizer.evaluate_all_eligible_claims()
+        ClaimEvaluationOrganizer.evaluate_all_eligible_claims()
     except Exception as e:
         logger.error(F"Exception occurred during evaluation task: {str(e)}\n{traceback.print_exc()}")
 
@@ -29,7 +29,7 @@ def claim_ai_processing():
 def pull_evaluated_tasks():
     # In case of event based activation claims are sent after submission
     if not ClaimAiQualityConfig.event_based_activation:
-        RestAIEvaluationOrganizer.pull_data_for_not_evaluated_bundles()
+        ClaimEvaluationOrganizer.pull_data_for_not_evaluated_bundles()
 
 
 @shared_task
@@ -43,6 +43,6 @@ def pull_data_for_evaluation(evaluation_hash):
         time.sleep(wait_)
         if not ClaimAiQualityConfig.event_based_activation:
             # Returns none if data was not updated
-            fetched = RestAIEvaluationOrganizer.pull_data_for_bundle(evaluation_hash)
+            fetched = ClaimEvaluationOrganizer.pull_data_for_bundle(evaluation_hash)
             if fetched is not None:
                 break

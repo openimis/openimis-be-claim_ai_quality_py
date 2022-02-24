@@ -16,7 +16,7 @@ class AiMutationValidationException(Exception):
         self.message = invalidation_reason
 
 
-class RestApiEvaluationFromMutation:
+class EvaluationFromMutation:
     @classmethod
     def evaluate(cls, *args, **kwargs):
         """
