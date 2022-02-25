@@ -18,8 +18,6 @@ from core.models import User
 
 logger = logging.getLogger(__name__)
 
-print("Hello world")
-
 
 class IntegratedClaimAIEvaluationOrganizer:
     EVALUATION_BUNDLE_MANAGER = ClaimBundleEvaluationManager(
