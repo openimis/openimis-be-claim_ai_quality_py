@@ -60,6 +60,8 @@ class ClaimResponseConverter:
             json_ext['claim_ai_quality'] = {}
         json_ext['claim_ai_quality']['was_categorized'] = True
         json_ext['claim_ai_quality']['response_time'] = str(TimeUtils.now())
+        if not json_ext['claim_ai_quality']['request_time'] or json_ext['claim_ai_quality']['request_time'] == 'None':
+            json_ext['claim_ai_quality']['request_time'] = str(TimeUtils.now())
         claim.json_ext = json_ext
 
     def _create_item_ai_quality_json_ext(self, item_adjudication):
@@ -114,11 +116,12 @@ class ClaimResponseConverter:
             provided.status = ClaimDetail.STATUS_REJECTED
 
         # jsonExt set to true, add ai_result = adjudiction.category + 1
-        json_ext = provided.json_ext or {}
-        json_ext['claim_ai_quality'] = self._create_item_ai_quality_json_ext(adjudication)
-        provided.json_ext = json_ext
-        provided.validity_from = TimeUtils.now()
-        provided.save()
+        if adjudication == ClaimAiQualityConfig.accepted_category_code:
+            json_ext = provided.json_ext or {}
+            json_ext['claim_ai_quality'] = self._create_item_ai_quality_json_ext(adjudication)
+            provided.json_ext = json_ext
+            provided.validity_from = TimeUtils.now()
+            provided.save()
 
     def _log_claim_evaluation_error(self, claim_response):
         error_message = claim_response['error'][0]['text']

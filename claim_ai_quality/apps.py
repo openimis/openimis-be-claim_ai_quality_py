@@ -25,7 +25,9 @@ DEFAULT_CONFIG = {
     "reason_rejected_by_ai_code": -2,
     "date_format": '%Y-%m-%d',
     "claim_evaluation_error_log_path": 'claim_ai_evaluation.log',
-    "misclassification_report_perms": ["112001"]
+    "misclassification_report_perms": ["112001"],
+    # One of "integrated", "rest_api", if not set integrated evaluation is used, if claim_ai module is installed.
+    "evaluation_method": ""
 }
 
 
@@ -56,6 +58,9 @@ class ClaimAiQualityConfig(AppConfig):
     wait_for_evaluation = DEFAULT_CONFIG['wait_for_evaluation']
 
     claim_ai_username = DEFAULT_CONFIG['claim_ai_username']
+
+    evaluation_method = DEFAULT_CONFIG['evaluation_method']
+
 
     def _configure_perms(self, cfg):
         for config, config_value in cfg.items():

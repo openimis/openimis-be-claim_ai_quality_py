@@ -38,6 +38,7 @@ class RestCommunicationInterface:
             next_bundle = self._get_from_iterator(data)
             if next_bundle:
                 bundles.append(self.send_bundle(next_bundle, wait_for_response))
+                logger.info(F"Sent bundle of size {len(next_bundle)}")
             else:
                 break
         return bundles
@@ -48,11 +49,14 @@ class RestCommunicationInterface:
             result = self.response_handler.update_claims_with_evaluation(response_json)
         else:
             result = self.response_handler.save_initial_claim_bundle_evaluation_result(response_json)
+            self._run_pull_evaluation_task(result)
         return result
 
     def pull_result_for_all_not_evaluated_bundles(self):
         identifiers = ClaimBundleEvaluationResult.objects\
-            .not_evaluated_bundles().values_list('evaluation_hash', flat=True)
+            .not_evaluated_bundles()\
+            .values_list('evaluation_hash', flat=True)
+
         bundles = [
             self.pull_evaluation_and_update_claims(identifier) for identifier in identifiers
         ]
@@ -60,7 +64,11 @@ class RestCommunicationInterface:
 
     def pull_evaluation_and_update_claims(self, evaluation_hash):
         response_json = self.rest_client.get_claim_bundle(evaluation_hash)
-        return self.response_handler.update_claims_with_evaluation(response_json)
+        if self._confirm_bundle_evaluated(response_json):
+            return self.response_handler.update_claims_with_evaluation(response_json)
+        else:
+            logger.info(f"No AI Evaluated claims in Response. Bundle ({evaluation_hash}) is not evaluated")
+        return None
 
     def _send_data_bundle(self, bundle, wait_for_response):
         try:
@@ -86,3 +94,21 @@ class RestCommunicationInterface:
         for b in bundle:
             b.json_ext['claim_ai_quality']['request_time'] = str(TimeUtils.now())
         Claim.objects.bulk_update(bundle, ['json_ext'])
+
+    def _confirm_bundle_evaluated(self, bundle):
+        for entry in bundle['entry']:
+            for item in entry["resource"]["item"]:
+                adjudication = item["adjudication"][0]
+                category = adjudication["category"]["coding"][0]["code"]
+                value = adjudication["reason"]["coding"][0]["code"]
+                if category == '-2' and value != '-2':
+                    return True
+        return False
+
+    @classmethod
+    def _run_pull_evaluation_task(cls, result: ClaimBundleEvaluationResult):
+        # TODO: Replace this with subscriptions based pull when available
+        from claim_ai_quality.tasks import pull_data_for_evaluation
+        PULLING_DATA_TASK = pull_data_for_evaluation
+        PULLING_DATA_TASK.delay(result.evaluation_hash, )
+        pass
