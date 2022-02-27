@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class IntegratedClaimAIEvaluationOrganizer:
     EVALUATION_BUNDLE_MANAGER = ClaimBundleEvaluationManager(
-        user=User.objects.get(username=ClaimAiQualityConfig.claim_ai_username)
+        user=User.objects.get(t_user__username=ClaimAiQualityConfig.claim_ai_username)
     )
     CLAIM_RESPONSE_CONVERTER = ClaimResponseConverter()
     BUNDLE_CONVERTER = ClaimBundleEvaluationClaimResponseBundleBuilder(ClaimResponseBuilderFactory())

@@ -5,6 +5,7 @@ from django.db import transaction
 
 from api_fhir_r4.serializers import ClaimSerializer
 from claim.models import Claim
+from claim_ai_quality.apps import ClaimAiQualityConfig
 from claim_ai_quality.communication_interface.rest_api.response_handler import RestResponseEvaluationHandler
 from claim_ai_quality.communication_interface.rest_api.rest_client import ClaimRestApiRequestClient
 from claim_ai_quality.communication_interface import ClaimBundleConverter
@@ -99,9 +100,10 @@ class RestCommunicationInterface:
         for entry in bundle['entry']:
             for item in entry["resource"]["item"]:
                 adjudication = item["adjudication"][0]
-                category = adjudication["category"]["coding"][0]["code"]
+                category = str(adjudication["category"]["coding"][0]["code"])
                 value = adjudication["reason"]["coding"][0]["code"]
-                if category == '-2' and value != '-2':
+                # Value == -2 item/service adjudication is undefined
+                if category == ClaimAiQualityConfig.reason_rejected_by_ai_code and value != '-2':
                     return True
         return False
 

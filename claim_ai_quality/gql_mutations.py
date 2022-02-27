@@ -17,4 +17,4 @@ class EvaluateByAIMutation(OpenIMISMutation):
 
     @classmethod
     def async_mutate(cls, user, **data):
-        return ClaimEvaluationOrganizer.evaluate_claims_from_mutation(user, **data)
+        return ClaimEvaluationOrganizer.evaluate_claims_from_mutation(user=user, **data)
