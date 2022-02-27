@@ -1,0 +1,147 @@
+{
+    "resourceType": "Bundle",
+    "type": "collection",
+    "identifier": {
+        "type": {
+            "coding": [
+                {
+                    "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                    "code": "UUID"
+                }
+            ]
+        },
+        "value": "AAAAEB75-85F1-4030-AB84-C767E5DCAAAA"
+    },
+    "entry": [{
+        "fullUrl": "http://localhost:8000/claim_ai/ClaimResponse/AAAA1E5A-C491-4468-A540-567E569BAAAA",
+        "resource": {
+            "resourceType": "ClaimResponse",
+            "id": "AAAA1E5A-C491-4468-A540-567E569BAAAA",
+            "identifier": [{
+                "type": {
+                    "coding": [{
+                        "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                        "code": "UUID"
+                    }]
+                },
+                "value": "AAAA1E5A-C491-4468-A540-567E569BAAAA"
+            }, {
+                "type": {
+                    "coding": [{
+                        "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                        "code": "Code"
+                    }]
+                },
+                "value": "T00002"
+            }],
+            "status": "active",
+            "type": {
+                "coding": [{
+                    "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/claim-visit-type",
+                    "code": "O",
+                    "display": "Other"
+                }]
+            },
+            "use": "claim",
+            "patient": {
+                "reference": "Patient/AAAA08B5-6E85-470C-83EC-0EE9370F0000",
+                "type": "Patient",
+                "identifier": {
+                    "type": {
+                        "coding": [{
+                            "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                            "code": "UUID"
+                        }]
+                    },
+                    "value": "AAAA08B5-6E85-470C-83EC-0EE9370F0000"
+                }
+            },
+            "created": "CREATED_DATE",
+            "insurer": {
+                "reference": "Organization/openIMIS-Claim-AI"
+            },
+            "requestor": {
+                "reference": "Practitioner/AAAA5229-DD11-4383-863C-E2FAD1B20000",
+                "type": "Practitioner",
+                "identifier": {
+                    "type": {
+                        "coding": [{
+                            "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                            "code": "UUID"
+                        }]
+                    },
+                    "value": "AAAA5229-DD11-4383-863C-E2FAD1B20000"
+                }
+            },
+            "request": {
+                "reference": "ClaimV2/AAAA1E5A-C491-4468-A540-567E569BAAAA",
+                "type": "ClaimV2",
+                "identifier": {
+                    "type": {
+                        "coding": [{
+                            "system": "https://openimis.github.io/openimis_fhir_r4_ig/CodeSystem/openimis-identifiers",
+                            "code": "UUID"
+                        }]
+                    },
+                    "value": "AAAA1E5A-C491-4468-A540-567E569BAAAA"
+                }
+            },
+            "outcome": "complete",
+            "item": [{
+                "extension": [{
+                    "url": "Medication",
+                    "valueReference": {
+                        "reference": "Medication/AAAA76E2-DC28-4B48-8E29-3AC4ABEC0000"
+                    }
+                }],
+                "itemSequence": 1,
+                "adjudication": [{
+                    "category": {
+                        "coding": [{
+                            "code": "-2"
+                        }],
+                        "text": "AI"
+                    },
+                    "reason": {
+                        "coding": [{
+                            "code": "1"
+                        }],
+                        "text": "rejected"
+                    },
+                    "amount": {
+                        "value": 10.0,
+                        "currency": "$"
+                    },
+                    "value": 10.0
+                }]
+            }, {
+                "extension": [{
+                    "url": "ActivityDefinition",
+                    "valueReference": {
+                        "reference": "ActivityDefinition/AAAA29BA-3F4E-4E6F-B55C-23A488A10000"
+                    }
+                }],
+                "itemSequence": 2,
+                "adjudication": [{
+                    "category": {
+                        "coding": [{
+                            "code": "-2"
+                        }],
+                        "text": "AI"
+                    },
+                    "reason": {
+                        "coding": [{
+                            "code": "0"
+                        }],
+                        "text": "accepted"
+                    },
+                    "amount": {
+                        "value": 400.0,
+                        "currency": "$"
+                    },
+                    "value": 1.0
+                }]
+            }]
+        }
+    }]
+}
