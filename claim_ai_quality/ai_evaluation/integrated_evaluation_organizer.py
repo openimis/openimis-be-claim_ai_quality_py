@@ -62,10 +62,10 @@ class IntegratedClaimAIEvaluationOrganizer:
         """
         Send bundle of claims for evaluation. Created for event based evaluation.
         """
-        claims = add_json_ext_to_all_submitted_claims(claims)
+        add_json_ext_to_all_submitted_claims(claims)
         claims_for_evaluation = []
         for c in claims:
-            if c.status == Claim.STATUS_CHECKED:
+            if c.status != Claim.STATUS_REJECTED:
                 claims_for_evaluation.append(c)
             else:
                 logger.info(F"Claim {c} will not be evaluated, it's not in checked state")

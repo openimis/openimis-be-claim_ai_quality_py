@@ -38,8 +38,8 @@ class RestApiEventBasedEvaluation:
                 "Input has to provide non empty `submitted_claims` argument with Iterable of claim objects")
         interface = kwargs.get('communication_interface') or cls._get_default_interface()
         wait_for_response = kwargs.get('wait_for_response') or False
-        claims = add_json_ext_to_all_submitted_claims(submitted_claims)
-        cls._evaluate_checked_claims_on_event_activation(claims, interface, wait_for_response)
+        add_json_ext_to_all_submitted_claims(submitted_claims)
+        cls._evaluate_checked_claims_on_event_activation(submitted_claims, interface, wait_for_response)
 
     @classmethod
     def _evaluate_checked_claims_on_event_activation(cls, claims, interface, wait_for_response):

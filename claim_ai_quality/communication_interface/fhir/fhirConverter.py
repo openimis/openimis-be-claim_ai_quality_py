@@ -25,6 +25,10 @@ class ClaimBundleConverter:
         self.fhir_serializer.context['contained'] = True
 
     def build_claim_bundle(self, claims: List[Model]) -> dict:
+        """
+        Builds bundle of claims. If claim from collection doesn't have any items or services in STATUS_PASSED it'll
+        not be included in the bundle.
+        """
         fhir_claims = [self.fhir_serializer.to_representation(claim) for claim in claims]
         # processes = []
         # fhir_claims = []

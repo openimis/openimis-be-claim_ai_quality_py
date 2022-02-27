@@ -85,6 +85,8 @@ def add_json_ext_to_all_submitted_claims(all_submitted_claims=None):
         # TODO: Should be bulk operation
         json_ext = claim.json_ext or {}
         if json_ext.get('claim_ai_quality', None):
+            if claim.status != Claim.STATUS_REJECTED:
+                claims_for_ai_evaluation.append(claim)
             continue
         if claim.status != Claim.STATUS_REJECTED:
             ai_quality_json_entry = get_base_claim_ai_json_extension()
