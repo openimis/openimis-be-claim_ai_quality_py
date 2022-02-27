@@ -3,13 +3,11 @@ from django.apps import AppConfig
 MODULE_NAME = 'claim_ai_quality'
 
 DEFAULT_CONFIG = {
-    "claim_ai_url": "ws://localhost:8000/api/claim_ai/ws/Claim/process/",
     "rest_api_login_endpoint": "http://localhost:8000/api/api_fhir_r4/login/",
     "rest_api_bundle_evaluation_endpoint": "http://localhost:8000/api/claim_ai/claim_bundle_evaluation/",
     "rest_api_single_claim_evaluation_endpoint": "http://localhost:8000/api/claim_ai/claim_evaluation/",
     "wait_for_evaluation": True,  # Determines if during sending REST Requests interface wants to wait for response.
 
-    "rest_api_base_url": "ws://localhost:8000/api/claim_ai/",
     "rest_api_user_login": 'claim_ai_admin',  # Used for JWT Authentication on Claim AI Server
     "rest_api_user_password": 'claim_ai_admin',  # Used for JWT Authentication on Claim AI Server
 
@@ -17,11 +15,8 @@ DEFAULT_CONFIG = {
     "event_based_activation": False,
     "bundle_size": 200,
     "request_time_resend_after_hours": 15,
-    "zip_bundle": False,
-    "connection_timeout": 15,
-    "authentication_token": '',
-    "accepted_category_code": 0,
-    "rejected_category_code": 1,
+    "accepted_category_code": '0',
+    "rejected_category_code": '1',
     "reason_rejected_by_ai_code": -2,
     "date_format": '%Y-%m-%d',
     "claim_evaluation_error_log_path": 'claim_ai_evaluation.log',
@@ -34,12 +29,8 @@ DEFAULT_CONFIG = {
 class ClaimAiQualityConfig(AppConfig):
     name = MODULE_NAME
 
-    claim_ai_url = DEFAULT_CONFIG["claim_ai_url"]
     event_based_activation = DEFAULT_CONFIG["event_based_activation"]
     bundle_size = DEFAULT_CONFIG["bundle_size"]
-    zip_bundle = DEFAULT_CONFIG["zip_bundle"]
-    connection_timeout = DEFAULT_CONFIG["connection_timeout"]
-    authentication_token = DEFAULT_CONFIG["authentication_token"]
     rejected_category_code = DEFAULT_CONFIG["rejected_category_code"]
     accepted_category_code = DEFAULT_CONFIG["accepted_category_code"]
     reason_rejected_by_ai_code = DEFAULT_CONFIG["reason_rejected_by_ai_code"]
