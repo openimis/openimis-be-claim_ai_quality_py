@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class IntegratedClaimAIEvaluationOrganizer:
     EVALUATION_BUNDLE_MANAGER = ClaimBundleEvaluationManager(
-        user=User.objects.get(username=ClaimAiQualityConfig.claim_ai_username)
+        user=User.objects.get(t_user__username=ClaimAiQualityConfig.claim_ai_username)
     )
     CLAIM_RESPONSE_CONVERTER = ClaimResponseConverter()
     BUNDLE_CONVERTER = ClaimBundleEvaluationClaimResponseBundleBuilder(ClaimResponseBuilderFactory())
@@ -62,7 +62,7 @@ class IntegratedClaimAIEvaluationOrganizer:
         """
         Send bundle of claims for evaluation. Created for event based evaluation.
         """
-        claims = add_json_ext_to_all_submitted_claims(claims)
+        add_json_ext_to_all_submitted_claims(claims)
         claims_for_evaluation = []
         for c in claims:
             if c.status == Claim.STATUS_CHECKED:

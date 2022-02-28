@@ -3,6 +3,7 @@ import traceback
 
 import graphene
 from claim.gql_mutations import SubmitClaimsMutation
+from core.models import User
 from core.schema import signal_mutation_module_after_mutating, signal_mutation_module_validate
 from claim.models import Claim
 from django.dispatch import dispatcher
@@ -56,6 +57,10 @@ def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
             ClaimEvaluationOrganizer.evaluate_selected_claims(claims_)
         except AiMutationValidationException as exc:
             return [{'message': str(exc.message), 'detail': str(exc)}]
+        except User.DoesNotExist as a:
+            logger.error(f"User with username {ClaimAiQualityConfig.claim_ai_username} does not exit. "
+                         f"User with this username is required to perform evaluation related operations on database.")
+            raise a
         except Exception as e:
             logger.exception(F"Unknown exception occurred during AI Evaluation Mutation, error: {e}")
             logger.debug(traceback.format_exc())

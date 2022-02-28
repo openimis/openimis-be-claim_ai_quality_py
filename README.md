@@ -8,20 +8,26 @@ It is dedicated to be deployed as a module of [openimis-be_py](https://github.co
 None
 
 ## Listened Django Signals
-* SubmitClaimsMutation: adds 'claim_ai_quality' key to the json_ext field on claim submissions
+#### SubmitClaimsMutation 
+Adds 'claim_ai_quality' key to the json_ext field on claim submissions.  
+If ClaimAiQualityConfig.event_based_activation is set to true AI adjudication is performed.
+#### EvaluateByAIMutation
+Adjudication is called using `after_claim_ai_evaluation_validation` signal.
 
 
 ## Services
 * AiQualityReportService, loading claims used for misclassification report
 
-## Reports (template can be overloaded via report_template.tempalte)
-* miscategorisation_report
+## Reports
+* #### miscategorisation_report
 
 ## GraphQL Queries
 None
 
-## GraphQL Mutations - each mutation emits default signals and return standard error lists (cfr. openimis-be-core_py)
-None
+## GraphQL Mutations
+#### EvaluateByAIMutation
+Used for manual AI Adjudication of selected claims through `after_claim_ai_evaluation_validation` signal. 
+`gql_mutation_submit_claims_perms` permission required. 
 
 ## Additional Endpoints
 * miscategorisation_report: generating report regarding ai misclassification in  PDF format
@@ -32,31 +38,38 @@ None
 
 
 ## Configuration options (can be changed via core.ModuleConfiguration)
-  * claim_ai_url: AI Evaluation websocket endpoint, default ws://localhost:8000/api/claim_ai/ws/Claim/process/
-  * event_based_activation: if False claim bundles are send as scheduled job, if True bundle of claims is sent after each submission,
-  * bundle_size: number of claims in one bundle, by default 100,
-  * zip_bundle: if True claim bundle is compressed before sending, claim_ai module accepts both compressed and uncompressed bundles,
-  * connection_timeout: the maximum waiting time for a connection to websocket, if exceeded 
-    TimeoutError is raised,
-  * authentication_token: if authentication is required by server token have to be added in configuration,
-  * accepted_category_code: code for claim items and services positively evaluated by AI,
-  * rejected_category_code": code for claim items and services negatively evaluated by AI,
-  * reason_rejected_by_ai_code: rejection code for claims rejected by AI,
-  * date_format": date format used in FHIR response, by default YYYY-mm-dd
+#### Rest API Configuration
+* `rest_api_login_endpoint`: Endpoint used for getting user authentication token.   
+Default: `http://localhost:8000/api/api_fhir_r4/login/`,
+* `rest_api_bundle_evaluation_endpoint`: Endpoint used for sending bundle of claims for evaluation.  
+Default: `http://localhost:8000/api/claim_ai/claim_bundle_evaluation/`,
+* `rest_api_single_claim_evaluation_endpoint`: Endpoint used for sending single claim for evaluation.  
+Default: `http://localhost:8000/api/claim_ai/claim_evaluation/`,
+* `wait_for_evaluation`: If set to `False` system doesn't wait for server response and have to use other method to 
+pull adjudication data. 
+* `rest_api_user_login`: Username of user used for AI Server JWT Authentication.
+* `rest_api_user_password`: Username of user used for AI Server JWT Authentication.
+#### Remaining 
+* `claim_ai_username`: User dedicated to perform DB operations executed in background by Claim AI Quality module.
+By default it's `_ClaimAIAdmin` added in module migration.
+* `event_based_activation`: Determines if AI evaluation should be done on claim submission (`True`) or 
+using scheduled job (`True`). Default: `False`
+* bundle_size: number of claims in one bundle if scheduled job is used. Default: `200`,
+* `accepted_category_code`: Code for Items/Services positively evaluated by AI. Default: `0`,
+* `rejected_category_code`: Code for Items/Services negatively evaluated by AI. Default: `1`,
+* `reason_rejected_by_ai_code`: FHIR Rejection reason code for claims rejected by AI. Default: `-2`,
+* `date_format`: date format used in FHIR response. Default: `%Y-%m-%d`,
+* `misclassification_report_perms`: List of permissions required to get Misclassification report.  
+Default: [`112001`],
+* `evaluation_method`: Method used for AI evaluation. If set to `rest_api` claims are adjudicated using 
+REST API connection. If set to `integrated` then system is using `claim_ai` module installed on same instance
+as Claim AI Quality server.  
+Default: (empty string). - if `claim_ai` module is installed locally it uses this module. If it's 
+not installed REST API is used.  
 
 ## openIMIS Modules Dependencies
-* core.websocket.AsyncWebSocketClient
-* core.models.ModuleConfiguration
-* core.models.InteractiveUser
-* core.schema.signal_mutation_module_after_mutating
-* claim.models.Claim 
-* claim.models.ClaimDetail  
-* claim.models.ClaimItem
-* claim.models.ClaimService
-* claim.models.gql_mutations.SubmitClaimsMutation 
-* api_fhir_r4.models.Bundle
-* api_fhir_r4.models.BundleType
-* api_fhir_r4.models.BundleEntry
-* api_fhir_r4.serializers.ClaimSerializer
-* location.models.UserDistrict
-* report.services.ReportService
+* core
+* claim
+* api_fhir_r4
+* location
+* report
