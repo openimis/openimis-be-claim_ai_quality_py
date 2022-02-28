@@ -56,13 +56,14 @@ def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
         try:
             ClaimEvaluationOrganizer.evaluate_selected_claims(claims_)
         except AiMutationValidationException as exc:
+            logger.error(F"Unknown exception occurred during AI Evaluation Mutation, error: {e}")
             return [{'message': str(exc.message), 'detail': str(exc)}]
         except User.DoesNotExist as a:
             logger.error(f"User with username {ClaimAiQualityConfig.claim_ai_username} does not exit. "
                          f"User with this username is required to perform evaluation related operations on database.")
             raise a
         except Exception as e:
-            logger.exception(F"Unknown exception occurred during AI Evaluation Mutation, error: {e}")
+            logger.error(F"Unknown exception occurred during AI Evaluation Mutation, error: {e}")
             logger.debug(traceback.format_exc())
             return [{'message': str(e)}]
         return []
@@ -73,6 +74,7 @@ def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
 
     uuids = _get_uuids(kwargs)
     claims = Claim.objects.filter(uuid__in=uuids)
+    logger.error(F"Claims: {len(claims)}")
     return _send(claims)
 
 
