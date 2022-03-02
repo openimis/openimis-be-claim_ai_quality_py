@@ -7,7 +7,6 @@ from django.test import testcases
 from graphene import Schema
 from graphene.test import Client
 
-import claim_ai.evaluation.stored_resource_evaluation
 from claim.models import Claim, ClaimItem, ClaimService
 from claim_ai_quality.apps import ClaimAiQualityConfig
 from claim_ai_quality.schema import bind_signals
