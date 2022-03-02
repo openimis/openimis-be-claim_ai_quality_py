@@ -80,5 +80,5 @@ def after_claim_ai_evaluation_validation(sender: dispatcher.Signal, **kwargs):
 
 def bind_signals():
     signal_mutation_module_validate["claim_ai_quality"].connect(on_claim_ai_evaluation_mutation)
-    signal_mutation_module_after_mutating["claim_ai_quality"].connect(after_claim_ai_evaluation_validation)
+   # signal_mutation_module_after_mutating["claim_ai_quality"].connect(after_claim_ai_evaluation_validation)
     signal_mutation_module_after_mutating["claim"].connect(on_claim_submit_mutation)

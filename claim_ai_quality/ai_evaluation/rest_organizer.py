@@ -14,7 +14,7 @@ class RestAIEvaluationOrganizer:
         """
         Evaluate selected using data sent with GraphQL mutation.
         """
-        return EvaluationFromMutation.evaluate(user, **data)
+        return EvaluationFromMutation(cls).evaluate(user, **data)
 
     @classmethod
     def evaluate_all_eligible_claims(cls):
