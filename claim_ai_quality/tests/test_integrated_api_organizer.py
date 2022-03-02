@@ -3,16 +3,15 @@ from unittest.mock import PropertyMock, MagicMock
 
 from django.conf import settings
 from django.test import testcases
-
 from graphene import Schema
 from graphene.test import Client
 
+from claim import schema as claim_schema
 from claim.models import Claim, ClaimItem, ClaimService
+from claim_ai_quality import schema as claim_ai_schema
 from claim_ai_quality.apps import ClaimAiQualityConfig
 from claim_ai_quality.schema import bind_signals
 from claim_ai_quality.tests.rest_api.utils import ClaimAITestInitialDataGenerator
-from claim_ai_quality import schema as claim_ai_schema
-from claim import schema as claim_schema
 from core.models import MutationLog
 
 

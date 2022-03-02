@@ -1,8 +1,6 @@
-import asyncio
 import logging
 import threading
 import traceback
-
 from typing import List, Union
 
 from django.db.models import QuerySet

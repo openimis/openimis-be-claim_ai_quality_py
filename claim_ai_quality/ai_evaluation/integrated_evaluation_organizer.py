@@ -1,9 +1,7 @@
 import logging
 
 from claim.models import Claim
-from claim_ai.evaluation.converters import BundleConverter
-from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders import BundleBuilderFactory, \
-    ClaimResponseBuilderFactory
+from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders import ClaimResponseBuilderFactory
 from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders.base_builders.bundle_builders import \
     ClaimBundleEvaluationClaimResponseBundleBuilder
 from claim_ai.rest_api.claim_evaluation.claim_bundle_evaluation_manager import ClaimBundleEvaluationManager
@@ -15,7 +13,6 @@ from claim_ai_quality.utils import reset_sent_but_not_evaluated_claims, add_json
     get_eligible_claims_bundle_iterator
 from core import TimeUtils
 from core.models import User
-
 
 logger = logging.getLogger(__name__)
 

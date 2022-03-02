@@ -1,19 +1,17 @@
-from claim_ai_quality.apps import ClaimAiQualityConfig
-from product.test_helpers import create_test_product
+from medical.models import Diagnosis
+from medical.test_helpers import create_test_item, create_test_service
 
+from api_fhir_r4.tests import LocationTestMixin, PatientTestMixin
+from api_fhir_r4.utils import TimeUtils, DbManagerUtils
+from claim.models import Claim, ClaimItem, ClaimService
+from claim.test_helpers import create_test_claim_admin
+from claim_ai_quality.apps import ClaimAiQualityConfig
 from core import datetime
 from core.forms import User
 from core.services import create_or_update_interactive_user, create_or_update_core_user
-
 from insuree.test_helpers import create_test_insuree
 from location.models import HealthFacility
-from medical.test_helpers import create_test_item, create_test_service
-
-from api_fhir_r4.tests import GenericTestMixin, LocationTestMixin, PatientTestMixin
-from api_fhir_r4.utils import TimeUtils, DbManagerUtils
-from claim.models import Claim, ClaimItem, ClaimService
-from medical.models import Diagnosis
-from claim.test_helpers import create_test_claim_admin
+from product.test_helpers import create_test_product
 
 
 class ClaimAITestInitialDataGenerator:

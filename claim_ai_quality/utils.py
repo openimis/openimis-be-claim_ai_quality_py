@@ -1,14 +1,14 @@
 import logging
 from datetime import datetime
 
-from claim.models import Claim
-from core import TimeUtils
 from django.db import transaction
-
-from claim_ai_quality.apps import ClaimAiQualityConfig
+from django.db import utils as dbUtils
 from django.db.models import Q, TextField
 from django.db.models.functions import Cast
-from django.db import utils as dbUtils
+
+from claim.models import Claim
+from claim_ai_quality.apps import ClaimAiQualityConfig
+from core import TimeUtils
 
 
 def get_rejected_claim_json_extension(claim):

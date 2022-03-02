@@ -23,7 +23,8 @@ setup(
         'django',
         'django-db-signals',
         'djangorestframework',
-        'orjson'
+        'orjson',
+        'openimis-be-api_fhir_r4'
     ],
     classifiers=[
         'Environment :: Web Environment',

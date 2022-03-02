@@ -4,11 +4,9 @@ from typing import Union
 
 from django.db import transaction
 
-from claim.models import Claim
 from claim_ai_quality.apps import ClaimAiQualityConfig
 from claim_ai_quality.models import ClaimBundleEvaluationResult, BundleClaimEvaluationResult
 from core.datetimes.ad_datetime import datetime
-from core.models import User
 
 logger = logging.getLogger(__name__)
 

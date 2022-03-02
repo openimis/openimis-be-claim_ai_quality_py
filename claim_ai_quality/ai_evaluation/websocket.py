@@ -1,11 +1,8 @@
 import asyncio
 import concurrent.futures
-
 from collections import Iterable
 
 from api_fhir_r4.serializers import ClaimSerializer
-from asgiref.sync import async_to_sync
-
 from claim_ai_quality.apps import ClaimAiQualityConfig
 from claim_ai_quality.communication_interface import AiServerWebsocketClient, WebsocketCommunicationInterface, \
     ClaimBundleConverter

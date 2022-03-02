@@ -2,6 +2,7 @@ import logging
 from functools import lru_cache
 
 from django.db import migrations
+
 from core.models import RoleRight, Role
 
 logger = logging.getLogger(__name__)

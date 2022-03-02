@@ -1,14 +1,13 @@
-import concurrent.futures
 import logging
-
 from typing import List
-from claim.models import Claim, ClaimItem, ClaimService
-from fhir.resources.bundle import Bundle, BundleEntry, BundleLink
+
+from django.db.models import Model
+from fhir.resources.bundle import Bundle, BundleEntry
+
+from api_fhir_r4.converters import ReferenceConverterMixin
 from api_fhir_r4.models import BundleType
 from api_fhir_r4.serializers import ClaimSerializer
-from api_fhir_r4.converters import ReferenceConverterMixin
-from django.db.models import Model
-
+from claim.models import Claim, ClaimItem, ClaimService
 from claim_ai_quality.communication_interface.fhir._claim_response_converter import ClaimResponseConverter
 
 logger = logging.getLogger(__name__)

@@ -2,14 +2,14 @@ import logging
 import traceback
 
 import graphene
-from claim.gql_mutations import SubmitClaimsMutation
-from core.models import User
-from core.schema import signal_mutation_module_after_mutating, signal_mutation_module_validate
-from claim.models import Claim
 from django.dispatch import dispatcher
 
-from .ai_evaluation import ClaimEvaluationOrganizer
+from claim.gql_mutations import SubmitClaimsMutation
+from claim.models import Claim
 from claim_ai_quality.ai_evaluation.mutation_evaluation import AiMutationValidationException
+from core.models import User
+from core.schema import signal_mutation_module_after_mutating, signal_mutation_module_validate
+from .ai_evaluation import ClaimEvaluationOrganizer
 from .apps import ClaimAiQualityConfig
 from .gql_mutations import EvaluateByAIMutation
 from .models import ClaimAiQualityMutation

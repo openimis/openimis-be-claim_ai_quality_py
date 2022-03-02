@@ -1,13 +1,13 @@
-import itertools
-
-import core
 import uuid
-from claim.models import Claim, ClaimService, ClaimItem
+from typing import Union, Iterator
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet, Q
 from django.utils.translation import gettext as _
-from typing import Union, Iterator
+
+import core
+from claim.models import Claim, ClaimService, ClaimItem
 
 
 class AiQualityReportService(object):

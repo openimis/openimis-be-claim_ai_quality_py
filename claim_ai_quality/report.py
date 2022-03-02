@@ -2,13 +2,11 @@ from collections import namedtuple, defaultdict
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
-
-from core.models import InteractiveUser
-
-from claim.models import Claim, ClaimDetail, ClaimItem, ClaimService
 from typing import Iterable
 
+from claim.models import Claim, ClaimDetail, ClaimItem, ClaimService
 from claim_ai_quality.apps import ClaimAiQualityConfig
+from core.models import InteractiveUser
 
 
 class CodeStringRepresentation:

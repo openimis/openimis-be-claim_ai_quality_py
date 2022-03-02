@@ -1,12 +1,11 @@
 import logging
 import traceback
 
-from graphql_jwt.exceptions import PermissionDenied
-from claim.apps import ClaimConfig
 from django.utils.translation import gettext as _
+from graphql_jwt.exceptions import PermissionDenied
 
+from claim.apps import ClaimConfig
 from claim.models import Claim
-
 
 logger = logging.getLogger(__name__)
 
