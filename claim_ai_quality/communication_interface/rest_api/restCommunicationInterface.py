@@ -4,7 +4,7 @@ import traceback
 from api_fhir_r4.serializers import ClaimSerializer
 from claim.models import Claim
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from claim_ai_quality.communication_interface import ClaimBundleConverter
+from claim_ai_quality.fhir import ClaimBundleConverter
 from claim_ai_quality.communication_interface.rest_api.response_handler import RestResponseEvaluationHandler
 from claim_ai_quality.communication_interface.rest_api.rest_client import ClaimRestApiRequestClient
 from claim_ai_quality.models import ClaimBundleEvaluationResult

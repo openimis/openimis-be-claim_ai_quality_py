@@ -1,6 +1,6 @@
 from api_fhir_r4.serializers import ClaimSerializer
 from claim_ai_quality.ai_evaluation.mutation_evaluation import EvaluationFromMutation
-from claim_ai_quality.communication_interface import ClaimBundleConverter
+from claim_ai_quality.fhir import ClaimBundleConverter
 from claim_ai_quality.communication_interface.rest_api.restCommunicationInterface import RestCommunicationInterface
 from ._rest_api.eligible_claims_evaluation import RestApiAllEligibleClaimsEvaluation, \
     RestApiEventBasedEvaluation

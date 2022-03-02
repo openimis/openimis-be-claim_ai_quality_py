@@ -8,7 +8,7 @@ from typing import List
 
 from django.db.models import Model
 
-from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBundleConverter
+from claim_ai_quality.fhir.fhirConverter import ClaimBundleConverter
 from core.websocket import AsyncWebSocketClient
 
 logger = logging.getLogger(__name__)

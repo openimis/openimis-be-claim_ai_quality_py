@@ -14,7 +14,7 @@ from claim.models import Claim, ClaimItem, ClaimService
 from claim_ai_quality import schema as claim_ai_schema
 from claim_ai_quality.ai_evaluation.rest_organizer import RestAIEvaluationOrganizer
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from claim_ai_quality.communication_interface import ClaimBundleConverter
+from claim_ai_quality.fhir import ClaimBundleConverter
 from claim_ai_quality.schema import bind_signals
 from claim_ai_quality.tests.rest_api.requests_response_mock import RequestsMocked
 from claim_ai_quality.tests.rest_api.utils import ClaimAITestInitialDataGenerator
