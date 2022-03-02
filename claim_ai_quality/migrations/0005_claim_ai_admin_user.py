@@ -26,7 +26,7 @@ def _create_claim_ai_user(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ('claim_ai_quality', '0004_claimbundleevaluationresult_historicalclaimbundleevaluationresult'),
-        ('core', '0016_add_last_login_on_interactive_user')
+        ('core', '0015_missing_roles')
     ]
 
     operations = [
