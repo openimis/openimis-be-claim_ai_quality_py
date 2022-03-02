@@ -1,12 +1,11 @@
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext as _
-
-from .apps import ClaimAiQualityConfig
-from .report_template import template
-from .report import MisclassificationReportBuilder
 from report.services import ReportService
 
 from claim_ai_quality.services import AiQualityReportService
+from .apps import ClaimAiQualityConfig
+from .report import MisclassificationReportBuilder
+from .report_template import template
 
 
 def miscategorisation_report(request):

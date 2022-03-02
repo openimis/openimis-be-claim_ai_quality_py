@@ -2,8 +2,8 @@ import uuid
 
 from django.db import models
 
-from core import models as core_models
 from claim.models import Claim
+from core import models as core_models
 from core.datetimes.ad_datetime import datetime
 from core.fields import DateTimeField
 from core.models import HistoryModel, HistoryModelManager

@@ -1,5 +1,4 @@
 from django.utils.module_loading import import_string
-from .websocket import create_base_websocket_communication_interface, send_claims_websocket
 
 
 def __load_organizer(organizer):

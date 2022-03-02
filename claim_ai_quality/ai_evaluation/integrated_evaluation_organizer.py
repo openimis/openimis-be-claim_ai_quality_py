@@ -1,20 +1,18 @@
 import logging
 
 from claim.models import Claim
-from claim_ai.evaluation.converters import BundleConverter
-from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders import BundleBuilderFactory, \
-    ClaimResponseBuilderFactory
+from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders import ClaimResponseBuilderFactory
 from claim_ai.evaluation.converters.r4_fhir_resources.fhir_response_builders.base_builders.bundle_builders import \
     ClaimBundleEvaluationClaimResponseBundleBuilder
 from claim_ai.rest_api.claim_evaluation.claim_bundle_evaluation_manager import ClaimBundleEvaluationManager
 from claim_ai_quality.ai_evaluation.mutation_evaluation import EvaluationFromMutation
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from claim_ai_quality.communication_interface.fhir._claim_response_converter import ClaimResponseConverter
+from claim_ai_quality.fhir._claim_response_converter import ClaimResponseConverter
 from claim_ai_quality.models import ClaimBundleEvaluationResult, BundleClaimEvaluationResult
 from claim_ai_quality.utils import reset_sent_but_not_evaluated_claims, add_json_ext_to_all_submitted_claims, \
     get_eligible_claims_bundle_iterator
+from core import TimeUtils
 from core.models import User
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +29,14 @@ class IntegratedClaimAIEvaluationOrganizer:
         """
         Evaluate selected using data sent with GraphQL mutation.
         """
-        return EvaluationFromMutation.evaluate(user, **data)
+        return EvaluationFromMutation(cls).evaluate(user, **data)
 
     @classmethod
     def evaluate_all_eligible_claims(cls):
         """
         Send all claims stored in system that are eligible for AI Evaluation.
         """
+        logger.info("Evaluation from integrated solution triggered.")
         reset_sent_but_not_evaluated_claims()
         add_json_ext_to_all_submitted_claims()
         iterator = get_eligible_claims_bundle_iterator()
@@ -62,16 +61,19 @@ class IntegratedClaimAIEvaluationOrganizer:
         """
         Send bundle of claims for evaluation. Created for event based evaluation.
         """
+        logger.info("Evaluation from integrated solution triggered.")
         add_json_ext_to_all_submitted_claims(claims)
         claims_for_evaluation = []
         for c in claims:
             if c.status == Claim.STATUS_CHECKED:
+                c.json_ext['claim_ai_quality']['request_time'] = str(TimeUtils.now())
+                c.save()
                 claims_for_evaluation.append(c)
             else:
                 logger.info(F"Claim {c} will not be evaluated, it's not in checked state")
 
         reset_sent_but_not_evaluated_claims()
-        cls._evaluate(claims)
+        cls._evaluate(claims_for_evaluation)
 
     @classmethod
     def pull_data_for_not_evaluated_bundles(cls):
