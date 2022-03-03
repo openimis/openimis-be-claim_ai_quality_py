@@ -1,6 +1,5 @@
 import zlib
 from uuid import UUID
-from uuid import UUID
 
 import orjson
 import websocket
