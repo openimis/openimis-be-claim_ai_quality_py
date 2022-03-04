@@ -5,7 +5,7 @@ from itertools import groupby
 from django.db import transaction
 from medical.models import Item, Service
 
-from claim.models import Claim, ClaimDetail
+from claim.models import Claim, ClaimDetail, ClaimItem, ClaimService
 from claim_ai_quality.apps import ClaimAiQualityConfig
 from core import TimeUtils
 
@@ -50,9 +50,16 @@ class ClaimResponseConverter:
 
     def _update_items_status(self, claim, claim_response):
         grouped_items = self._group_items(claim_response['item'])
+        items, services = [], []
         for provided_key, claim_provisions in grouped_items:
             for index, item in enumerate(list(claim_provisions)):
-                self._update_single_item(item, claim)
+                provision = self._add_evaluation_info_to_item(item, claim)
+                if isinstance(provision, ClaimItem):
+                    items.append(provision)
+                else:
+                    services.append(provision)
+        ClaimItem.objects.bulk_update(items, ['rejection_reason', 'status', 'validity_from', 'json_ext'])
+        ClaimService.objects.bulk_update(services, ['rejection_reason', 'status', 'validity_from', 'json_ext'])
 
     def _update_claim_json_ext(self, claim):
         json_ext = claim.json_ext or {}
@@ -102,12 +109,11 @@ class ClaimResponseConverter:
     def _group_items(self, items):
         return groupby(items, key=lambda item: item['extension'][0]['valueReference']['reference'])
 
-    def _update_single_item(self, item, claim,):
+    def _add_evaluation_info_to_item(self, item, claim):
         provided = self._get_claim_item_by_claim_response_item(claim, item)
         if provided is None:
             return
 
-        provided.save_history()
         adjudication = str(self._get_item_adjudication(item))
 
         # change item status and service status to rejected if adjudication.category == 1
@@ -120,7 +126,7 @@ class ClaimResponseConverter:
         json_ext['claim_ai_quality'] = self._create_item_ai_quality_json_ext(adjudication)
         provided.json_ext = json_ext
         provided.validity_from = TimeUtils.now()
-        provided.save()
+        return provided
 
     def _log_claim_evaluation_error(self, claim_response):
         error_message = claim_response['error'][0]['text']
