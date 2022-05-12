@@ -1,11 +1,13 @@
-import json
 import asyncio
+import json
+import logging
 from abc import ABC
-
 from typing import Callable, Dict
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractPayloadHandler(ABC):
@@ -15,6 +17,7 @@ class AbstractPayloadHandler(ABC):
 
     def handle_payload(self, payload):
         payload_type = payload.get('type', '')
+        logger.debug("Payload: ", payload)
         return self.type_handlers.get(payload_type, 'default')(payload)
 
     def dispatch(self, payload: str):

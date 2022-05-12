@@ -1,20 +1,18 @@
 import asyncio
 import uuid
+from itertools import groupby
 
 from asgiref.sync import sync_to_async
-from claim.models import Claim
-from core import TimeUtils
-from itertools import groupby
-from datetime import datetime
-from django.core.paginator import Paginator
 from django.db import transaction, utils as dbUtils
 
-from . import AIResponsePayloadHandlerMixin
-from .websocket import AbstractFHIRWebSocket
-from ..apps import ClaimAiQualityConfig
+from claim.models import Claim
+from claim_ai_quality.apps import ClaimAiQualityConfig
+from claim_ai_quality.communication_interface import AIResponsePayloadHandlerMixin
+from claim_ai_quality.communication_interface.websocket import AbstractFHIRWebSocket
+from core import TimeUtils
 
 
-class AiServerCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIRWebSocket):
+class WebsocketCommunicationInterface(AIResponsePayloadHandlerMixin, AbstractFHIRWebSocket):
 
     async def send_all(self):
         self.response_query = {}

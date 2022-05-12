@@ -1,9 +1,9 @@
-import json
 import zlib
 from uuid import UUID
-import orjson
 
+import orjson
 import websocket
+
 try:
     import thread
 except ImportError:

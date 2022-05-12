@@ -1,20 +1,17 @@
 import asyncio
 import concurrent.futures
-
 from collections import Iterable
 
 from api_fhir_r4.serializers import ClaimSerializer
-from asgiref.sync import async_to_sync
-
 from claim_ai_quality.apps import ClaimAiQualityConfig
-from claim_ai_quality.communication_interface import AiServerWebsocketClient, AiServerCommunicationInterface, \
+from claim_ai_quality.communication_interface import AiServerWebsocketClient, WebsocketCommunicationInterface, \
     ClaimBundleConverter
 
 
-def create_base_communication_interface():
+def create_base_websocket_communication_interface():
     socket_url = ClaimAiQualityConfig.claim_ai_url  # ClaimAiQualityConfig.claim_ai_url
     socket_client = AiServerWebsocketClient(socket_url=socket_url)
-    return AiServerCommunicationInterface(socket_client, ClaimBundleConverter(ClaimSerializer()))
+    return WebsocketCommunicationInterface(socket_client, ClaimBundleConverter(ClaimSerializer()))
 
 
 async def await_connection(client):
@@ -27,7 +24,7 @@ async def connect(client):
     await client.open_connection()
 
 
-async def send_claims(client, claims=None):
+async def send_claims_websocket(client, claims=None):
     def __new_send_task_with_connection_release(send_method, *send_args, **send_kwargs):
         send = asyncio.get_event_loop().create_task(send_method(*send_args, **send_kwargs))
         send.add_done_callback(lambda x: client.release_connection())

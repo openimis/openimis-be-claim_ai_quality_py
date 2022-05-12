@@ -1,16 +1,14 @@
 import asyncio
-import functools
 import concurrent.futures
+import functools
 import logging
-
+import traceback
 from abc import ABC
-
 from typing import List
 
-import traceback
 from django.db.models import Model
 
-from claim_ai_quality.communication_interface.fhir.fhirConverter import ClaimBundleConverter
+from claim_ai_quality.fhir.fhirConverter import ClaimBundleConverter
 from core.websocket import AsyncWebSocketClient
 
 logger = logging.getLogger(__name__)

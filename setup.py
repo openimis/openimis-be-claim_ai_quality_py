@@ -23,7 +23,9 @@ setup(
         'django',
         'django-db-signals',
         'djangorestframework',
-        'orjson'
+        'orjson',
+        'fhir.resources>=6.2.0b3',  # From API FHIR R4
+        'openimis-be-api_fhir_r4'
     ],
     classifiers=[
         'Environment :: Web Environment',
